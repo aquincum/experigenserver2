@@ -1,0 +1,29 @@
+{
+    "name": "experigenserver2",
+    "version": "0.0.1",
+    "description": "Experigen server rethought using MongoDB",
+    "main": ".#server.js",
+    "scripts": {
+	"start": "node server.js",
+	"test": "mocha"
+    },
+    "repository": {
+	"type": "git",
+	"url": "git+ssh://git@github.com/aquincum/experigenserver2.git"
+    },
+    "keywords": [
+	"experiment",
+	"server"
+    ],
+    "author": "Daniel Szeredi",
+    "license": "MIT",
+    "bugs": {
+	"url": "https://github.com/aquincum/experigenserver2/issues"
+    },
+    "homepage": "https://github.com/aquincum/experigenserver2#readme",
+    "dependencies": {
+	"express": "*",
+	"mongodb": "*",
+	"yargs": "*"
+    }
+}
