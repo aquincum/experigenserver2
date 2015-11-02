@@ -1,8 +1,7 @@
 var http = require("http");
 var express = require("express");
 var doRouting = require("./routing");
-var parseOptions = function(yargs){
-    return yargs.usage("Usage: $0 [options]")
+var argv = require("yargs").usage("Usage: $0 [options]")
 	.default("p", 3000)
 	.alias("p", "port")
 	.nargs("p", 1)
@@ -12,8 +11,6 @@ var parseOptions = function(yargs){
 	.alias("h", "help")
 	.epilog("Daniel Szeredi (C) 2015")
 	.argv;
-};
-var argv = parseOptions(require("yargs"));
 
 /* ----------------------------------------------- */
 
