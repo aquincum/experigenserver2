@@ -16,8 +16,11 @@ module.exports.getUserFileName = function(htmlSource, experimentName, cb){
 		highest: {$max: "$userFileName"}
 	    }}
 	], function(err, result){
-	    if(err || result.length === 0){
+	    if(err){
 		cb(0);
+	    }
+	    else if (result.length === 0){
+		cb(1);
 	    }
 	    else {
 		cb(result[0].highest+1);
