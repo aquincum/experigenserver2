@@ -23,8 +23,8 @@
     "homepage": "https://github.com/aquincum/experigenserver2#readme",
     "dependencies": {
 	"express": "*",
-	"mongodb": "*",
 	"yargs": "*",
-	"mongodb": ">=2.0"
+	"mongodb": ">=2.0",
+	"fnv-plus": "*"
     }
 }

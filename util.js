@@ -1,3 +1,5 @@
+var fnv = require("fnv-plus");
+
 module.exports.cleanURL = function(htmlSource){
     var res = encodeURIComponent(htmlSource); // URL encoding
     // Sticking to the old ways for now
@@ -9,4 +11,12 @@ module.exports.cleanURL = function(htmlSource){
     res = res.replace(/(%3A|%2F)/g, "."); // http://
     res = res.replace(/(%7E|~)/g, "");
     return res;
+};
+
+module.exports.hash = function hash(wd){
+    return fnv.hash(wd, 52).hex();
+};
+
+module.exports.createCollectionName = function(sourceHtml, experimentName){
+    return "exp" + hash(sourceHtml) + hash(experimentName);
 };

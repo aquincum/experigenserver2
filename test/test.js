@@ -42,14 +42,34 @@ describe("URL cleaning", function(){
     });
 });
 
+describe("Hashing", function(){
+    var teststrings = ["asdASD???ammmpffffgh25",
+		       "asdASD???ammmpffffgh26"];
+    it("Should return the same for the same", function(){
+	assert.equal(util.hash(teststrings[0]), util.hash(teststrings[0]));
+    });
+    it("Should return different for different", function(){
+	assert.notEqual(util.hash(teststrings[0]), util.hash(teststrings[1]));
+    });
+    it("Should be shorter than 14 bytes", function(){
+	assert.equal(util.hash(teststrings[0]).length < 14, true);
+	assert.equal(util.hash(teststrings[1]).length < 14, true);
+	assert.equal(util.hash(teststrings[0]+teststrings[1]).length < 14, true);
+    });
+});
+
 describe("Database", function(){
+    var tempsourceurl = "http://localhost/testing/now";
+    var tempexperimentname = "000test000";
     it("Should connect", function(){
 	db.getDB(function(err, db){
+	    assert.equal(err, null);
 	    assert.ok(db);
 	});
     });
-    if(0) it("Should give me 1 as userfilename", function(){
-	var ufn = db.getUserFileName("000xxtest000");
-	assert.equal(ufn, 1);
+    it("Should give me 1 as userfilename in a new experiment", function(){
+	db.getUserFileName(tempsourceurl, tempexperimentname, function(result){
+	    assert.equal(result, 1);
+	});
     });
 });
