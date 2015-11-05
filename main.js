@@ -1,6 +1,6 @@
 var http = require("http");
 var express = require("express");
-var doRouting = require("./routing");
+var doRouting = require("server/routing");
 var argv = require("yargs").usage("Usage: $0 [options]")
 	.default("p", 3000)
 	.alias("p", "port")

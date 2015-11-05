@@ -1,7 +1,7 @@
 var assert = require("assert");
-var routing = require("../routing");
-var db = require("../db");
-var util = require("../util");
+var routing = require("../server/routing");
+var db = require("../server/db");
+var util = require("../server/util");
 
 // let's do this
 /* first */

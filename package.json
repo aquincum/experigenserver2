@@ -4,7 +4,7 @@
     "description": "Experigen server rethought using MongoDB",
     "main": ".#server.js",
     "scripts": {
-	"start": "node server.js",
+	"start": "node main.js",
 	"test": "mocha"
     },
     "repository": {
