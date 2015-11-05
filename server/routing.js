@@ -1,3 +1,5 @@
+var db = require("./db");
+
 var postVersion = function(req, res){
     if(process.env.npm_package_version){
 	res.end(process.env.npm_package_version); // npm start
@@ -8,8 +10,22 @@ var postVersion = function(req, res){
     }
 };
 
+var getUserID = function(req, res){
+    var html = req.query.sourceurl,
+	expname = req.query.experimentName;
+    if(!html || !expname) {
+	res.end("(0)");
+    }
+    else {
+	db.getUserFileName(html, expname, function (ufn){
+	    res.end("(\"" + ufn.toString() + "\")");
+	});
+    }
+};
+
 var routes = {
-    "/version" : postVersion
+    "/version" : postVersion,
+    "/getuserid" : getUserID
 };
 
 

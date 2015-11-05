@@ -13,9 +13,11 @@ module.exports.cleanURL = function(htmlSource){
     return res;
 };
 
-module.exports.hash = function hash(wd){
+var hash = function hash(wd){
     return fnv.hash(wd, 52).hex();
 };
+
+module.exports.hash = hash;
 
 module.exports.createCollectionName = function(sourceHtml, experimentName){
     return "exp" + hash(sourceHtml) + hash(experimentName);

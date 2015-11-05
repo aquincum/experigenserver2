@@ -5,9 +5,9 @@ var util = require("./util");
 
 module.exports.getUserFileName = function(htmlSource, experimentName, cb){
     var cleanHTMLS = util.cleanURL(htmlSource);
-    MongoClient.connect(url, {}, function(err, db){
+    MongoClient.connect(url, function(err, db){
 	var collname = util.createCollectionName(htmlSource, experimentName);
-	var coll = db.getCollection(collname);
+	var coll = db.collection(collname);
 	coll.aggregate([
 	    { $match: {experimentName: experimentName} },
 	    { $project: {userFileName: 1} },
@@ -16,11 +16,11 @@ module.exports.getUserFileName = function(htmlSource, experimentName, cb){
 		highest: {$max: "$userFileName"}
 	    }}
 	], function(err, result){
-	    if(err){
+	    if(err || result.length === 0){
 		cb(0);
 	    }
 	    else {
-		cb(result.highest+1);
+		cb(result[0].highest+1);
 	    }
 	});
     });
