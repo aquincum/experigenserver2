@@ -3,6 +3,9 @@ var routing = require("../server/routing");
 var db = require("../server/db");
 var util = require("../server/util");
 
+var tempsourceurl = "http://localhost/testing/now";
+var tempexperimentname = "000test000";
+
 // let's do this
 /* first */
 describe("Routing", function(){
@@ -72,8 +75,6 @@ describe("Hashing", function(){
 });
 
 describe("Database", function(){
-    var tempsourceurl = "http://localhost/testing/now";
-    var tempexperimentname = "000test000";
     it("Should connect", function(){
 	db.getDB(function(err, db){
 	    assert.equal(err, null);
@@ -83,6 +84,27 @@ describe("Database", function(){
     it("Should give me 1 as userfilename in a new experiment", function(){
 	db.getUserFileName(tempsourceurl, tempexperimentname, function(result){
 	    assert.equal(result, 1);
+	});
+    });
+});
+
+describe("getuserid", function(){
+    it("Should give back 0 if problems in request", function(){
+	routing.routes["/getuserid"]({query: {}}, {
+	    end: function(data){
+		assert.equal(data, '("0")');
+	    }
+	});
+    });
+    it("Should give back 1 if new experiment", function(){
+	routing.routes["/getuserid"](
+	{ query: {
+	    sourceurl: tempsourceurl,
+	    experimentName: tempexperimentname
+	}}, {
+	    end: function(data){
+		assert.equal(data, '("1")');
+	    }
 	});
     });
 });
