@@ -56,6 +56,12 @@ describe("Hashing", function(){
 	assert.equal(util.hash(teststrings[1]).length < 14, true);
 	assert.equal(util.hash(teststrings[0]+teststrings[1]).length < 14, true);
     });
+    it("Should create unique collection names", function(){
+	var cn = util.createCollectionName(teststrings[0], teststrings[1]);
+	assert.equal(cn, util.createCollectionName(teststrings[0], teststrings[1]));
+	assert.notEqual(cn, util.createCollectionName(teststrings[0]+"q", teststrings[1]));
+	assert.equal(cn.slice(0,3), "exp");
+    });
 });
 
 describe("Database", function(){
