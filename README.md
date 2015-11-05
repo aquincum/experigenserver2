@@ -3,6 +3,8 @@
 
 [![Build Status](https://travis-ci.org/aquincum/experigenserver2.svg?branch=master)](https://travis-ci.org/aquincum/experigenserver2)
 [![Code Climate](https://codeclimate.com/github/aquincum/experigenserver2/badges/gpa.svg)](https://codeclimate.com/github/aquincum/experigenserver2)
+[![Dependency Status](https://gemnasium.com/aquincum/experigenserver2.svg)](https://gemnasium.com/aquincum/experigenserver2)
+
 
 ## Why?
 

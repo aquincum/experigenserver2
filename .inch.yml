@@ -1,0 +1,6 @@
+files:
+  included:
+    - ./*.js
+    - server/*.js
+  excluded:
+    - node_modules/*

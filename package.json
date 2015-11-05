@@ -27,5 +27,16 @@
 	"mongodb": ">=2.0",
 	"fnv-plus": "*",
 	"mocha": "*"
+    },
+    "devDependencies": {
+	"blanket": "^1.1.9",
+	"coveralls": "^2.11.4",
+	"mocha-lcov-reporter": "^1.0.0"
+    },
+    "config": {
+	"blanket": {
+            "pattern": [""],
+	    "data-cover-never": [ "node_modules", "test" ]
+	}
     }
 }
