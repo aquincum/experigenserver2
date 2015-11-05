@@ -27,10 +27,10 @@ var routes = {
     "/version" : postVersion,
     "/getuserid" : getUserID
 };
+module.exports.routes = routes;
 
 
-
-module.exports = function doRouting(server) {
+module.exports.route = function doRouting(server) {
     for(var path in routes){
 	server.get(path, routes[path]);
     }

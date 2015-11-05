@@ -1,6 +1,6 @@
 var http = require("http");
 var express = require("express");
-var doRouting = require("./server/routing");
+var routing = require("./server/routing");
 var argv = require("yargs").usage("Usage: $0 [options]")
 	.default("p", 3000)
 	.alias("p", "port")
@@ -16,7 +16,7 @@ var argv = require("yargs").usage("Usage: $0 [options]")
 
 var server = express();
 //server.set("view engine", "ejs");
-doRouting(server);
+routing.route(server);
 
 
 
