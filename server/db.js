@@ -6,7 +6,7 @@ var util = require("./util");
 module.exports.getUserFileName = function(htmlSource, experimentName, cb){
     var cleanHTMLS = util.cleanURL(htmlSource);
     MongoClient.connect(url, function(err, db){
-	var collname = util.createCollectionName(htmlSource, experimentName);
+	var collname = util.createCollectionName(cleanHTMLS, experimentName);
 	var coll = db.collection(collname);
 	coll.aggregate([
 	    { $match: {experimentName: experimentName} },
