@@ -1,3 +1,6 @@
+/** Handles the routing on the server 
+ * @module routing
+ */
 var db = require("./db");
 
 var postVersion = function(req, res){
@@ -27,9 +30,17 @@ var routes = {
     "/version" : postVersion,
     "/getuserid" : getUserID
 };
+
+/**
+ * A dictionary basically, with routes as keys and handler functions
+ * as values.
+ */
 module.exports.routes = routes;
 
-
+/**
+ * Attaches the routing handlers to the server.
+ * @param {Express~server} server The server to attach handlers to.
+ */
 module.exports.route = function doRouting(server) {
     for(var path in routes){
 	server.get(path, routes[path]);
