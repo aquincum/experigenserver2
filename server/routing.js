@@ -65,7 +65,7 @@ var dbWrite = function(req, res){
 	else {
 	    fail();
 	}
-    }
+    });
 };
 
 
