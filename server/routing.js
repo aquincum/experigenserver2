@@ -58,11 +58,13 @@ var dbWrite = function(req, res){
     }
 
     // let's pass on everything now to the db, I'll clean up there.
-    if(db.write(res.query)){
-	res.end("(\"true\")");
-    }
-    else {
-	fail();
+    db.write(res.query, function (success){
+	if(success){
+	    res.end("(\"true\")");
+	}
+	else {
+	    fail();
+	}
     }
 };
 

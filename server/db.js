@@ -7,6 +7,20 @@ var MongoClient = require("mongodb").MongoClient,
     url = "mongodb://localhost/experigen";
 var util = require("./util");
 
+
+
+/**
+ * Writes data to the server (async)
+ * @param {Object} query The whole web query coming from `req`
+ * @param {Function} cb Callback. Will be called with a boolean,
+ * `true` for success and `false` with error.
+ */
+module.exports.write = function (query, cb){
+    
+
+};
+
+
 /**
  * Returns the numeric userFileName for the given subject/session to
  * the callback. It checks out whether the colleciton exists at all,
