@@ -20,9 +20,9 @@ describe("Routing", function(){
     it("Should give me back the version string", function(){
 	routing.routes["/version"]({}, {
 	    end: function(data){
-		assert.equal(data, process.env.npm_package_version);
+		assert.equal(data, require("../package.json").version);
 	    }
-	})
+	});
     });
 });
 
