@@ -13,7 +13,7 @@ var postVersion = function(req, res){
 	res.end(process.env.npm_package_version); // npm start
     }
     else {
-	var pjson = require("./package.json");
+	var pjson = require("../package.json");
 	res.end(pjson.version); // node server.js
     }
 };
