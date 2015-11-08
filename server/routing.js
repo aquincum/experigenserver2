@@ -3,6 +3,11 @@
  */
 var db = require("./db");
 
+
+/**
+ * Posts the version of the server to the client.
+ * Route is /version
+ */
 var postVersion = function(req, res){
     if(process.env.npm_package_version){
 	res.end(process.env.npm_package_version); // npm start
@@ -13,6 +18,10 @@ var postVersion = function(req, res){
     }
 };
 
+/**
+ * Posts the userfilename/user ID to the client.
+ * Route is /getuserid
+ */
 var getUserID = function(req, res){
     var html = req.query.sourceurl,
 	expname = req.query.experimentName;
