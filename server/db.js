@@ -10,6 +10,34 @@ var util = require("./util");
 
 
 /**
+ * This function gets all of the data from the experiment denoted by
+ * the source URL and the experiment name and returns it to the 
+ * callback. This will be used initially in makecsv, but later on we
+ * should switch to a more stream-based way of working.
+ * @param {string} sourceurl The source URL
+ * @param {string} experimentName The experiment name
+ * @param {Function} cb An (err, results) style callback which is
+ * given the results. It should return an error if no such experiment
+ * is there in the db.
+ */
+module.exports.getAllData = function(sourceurl, experimentName, cb){
+    var cleanURL = util.cleanURL(sourceurl),
+	collname = util.createCollectionName(cleanURL, experimentName);
+
+    MongoClient.connect(url, function(err, db){
+	if(err) return cb(err);
+	var coll = db.collection(collname);
+	coll.find({experimentName: experimentName}, function(err, results){
+	    if(err) return cb(err);
+	    else cb(null, results);
+	}
+    });
+}:
+
+
+
+
+/**
  * Writes data to the server (async). We can take it for granted that
  * `query` has all the necessary fields.
  * @param {Object} query The whole web query coming from `req`
