@@ -108,3 +108,64 @@ describe("getuserid", function(){
 	});
     });
 });
+
+describe("dbwrite", function(){
+    it("Should fail if request is faulty", function(){
+	routing.routes["/dbwrite"]({query: {}}, {
+	    end: function(data){
+		assert.equal(data, '("false")');
+	    }
+	});
+	routing.routes["/dbwrite"]({query: {
+	    userFileName: 5,
+	    userCode: "JANI",
+	    sourceurl: "no.where"
+	}}, {
+	    end: function(data){
+		assert.equal(data, '("false")');
+	    }
+	});
+	routing.routes["/dbwrite"]({query: {
+	    experimentName: "xxx"
+	}}, {
+	    end: function(data){
+		assert.equal(data, '("false")');
+	    }
+	});
+	routing.routes["/dbwrite"]({}, {
+	    end: function(data){
+		assert.equal(data, '("false")');
+	    }
+	});
+    });
+    it("Should otherwise write to the database", function(){
+	var now = new Date();
+	var q = {
+	    query: {
+		sourceurl: tempsourceurl,
+		experimentName: tempexperimentname + "+",
+		userCode: "Tester",
+		userFileName: 1,
+		info: now.getTime()
+	    },
+	    ip: "127.0.0.1"	    
+	};
+	routing.routes["/dbwrite"](q, {
+	    end: function(data){
+		assert.equal(data, "(\"true\")");
+		db.getDB(function(err, _db){
+		    var collname = util.createCollectionName(q.sourceurl, q.experimentName);
+		    _db.collection(collname).findOne({info: now.getTime()}, function(err, doc){
+			assume.equal(err, null);
+			assume.equal(doc.userCode, "Tester");
+			assume.equal(doc.ip, "127.0.0.1");
+			_db.collection(collname).remove({info: now.getTime()}, function(err, result){
+			    assume.equal(err, null);
+			    assume.equal(result.result.n, 1);
+			});
+		    });
+		});
+	    }
+	});
+    });
+});

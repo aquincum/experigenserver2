@@ -52,13 +52,15 @@ var dbWrite = function(req, res){
 	userCode = req.query.userCode,
 	experimentName = req.query.experimentName,
 	sourceurl = req.query.sourceurl;
-
     if (!ufn || !userCode || !experimentName || !sourceurl){
 	return fail();
     }
-
+    // add IP and time
+    var query = req.query;
+    query.IP = req.ip;
+    query.time = (new Date()).getTime();
     // let's pass on everything now to the db, I'll clean up there.
-    db.write(res.query, function (success){
+    db.write(query, function (success){
 	if(success){
 	    res.end("(\"true\")");
 	}

@@ -10,14 +10,27 @@ var util = require("./util");
 
 
 /**
- * Writes data to the server (async)
+ * Writes data to the server (async). We can take it for granted that
+ * `query` has all the necessary fields.
  * @param {Object} query The whole web query coming from `req`
  * @param {Function} cb Callback. Will be called with a boolean,
  * `true` for success and `false` with error.
  */
 module.exports.write = function (query, cb){
-    
+    // I don't see the reason to clean up the fields as in server 1
+    // except for the sourceURL and maybe UFN
+    query.sourceurl = util.cleanURL(query.sourceurl);
+    query.userFileName = parseInt(query.userFileName, 10);
 
+    MongoClient.connect(url, function(err, db){
+	if(err) return cb(false);
+	var collname = util.createCollectionName(query.sourceurl, query.experimentName);
+	var coll = db.collection(collname);
+	// push it up
+	coll.insert(query, {} , function(err, result){
+	    cb(!err);
+	});
+    });
 };
 
 
