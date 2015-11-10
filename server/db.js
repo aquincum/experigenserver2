@@ -63,7 +63,9 @@ module.exports.getAllData = function(sourceurl, experimentName, destination, cb)
 	}
 	var coll = db.collection(collname);
 	coll.find({experimentName: experimentName,
-		   destination:    destination})
+		   destination:    destination},
+		  { _id: 0 }
+		 )
 	    .toArray(function(err, results){
 		if(err){
 		    return cb(err);

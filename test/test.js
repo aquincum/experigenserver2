@@ -3,9 +3,10 @@ var routing = require("../server/routing");
 var db = require("../server/db");
 var util = require("../server/util");
 
+var NTOWRITE = 100
 var tempsourceurl = "http://localhost/testing/now";
 var tempexperimentname = "000test000";
-
+var written = 0;
 // let's do this
 /* first */
 describe("Routing", function(){
@@ -77,7 +78,6 @@ describe("Hashing", function(){
 });
 
 describe("Database", function(){
-    var NTOWRITE = 100, written = 0;
     this.timeout(10 * 1000);
     it("Should connect", function(done){
 	db.getDB(function(err, db){
@@ -141,18 +141,6 @@ describe("Database", function(){
 	    done();
 	});
     });
-    it("Should be able to remove an experiment", function(done){
-	db.removeExperiment(tempsourceurl, tempexperimentname, function(err, res){
-	    assert.equal(err, null);
-	    assert.ok(res.result);
-	    assert.equal(res.result.ok, 1);
-	    assert.equal(res.result.n, written+1);
-	    db.getAllData(tempsourceurl, tempexperimentname, function(err, results){
-		assert.equal(err, db.NOSUCHEXPERIMENT);
-		done();
-	    });
-	});
-    });
 });
 
 describe("getuserid", function(){
@@ -168,10 +156,22 @@ describe("getuserid", function(){
 	routing.routes["/getuserid"](
 	{ query: {
 	    sourceurl: tempsourceurl,
-	    experimentName: tempexperimentname
+	    experimentName: tempexperimentname+"givback1"
 	}}, {
 	    end: function(data){
 		assert.equal(data, '("1")');
+		done();
+	    }
+	});
+    });
+    it("Should give back 2 after 1 user", function(done){
+	routing.routes["/getuserid"](
+	{ query: {
+	    sourceurl: tempsourceurl,
+	    experimentName: tempexperimentname
+	}}, {
+	    end: function(data){
+		assert.equal(data, '("2")');
 		done();
 	    }
 	});
@@ -250,6 +250,80 @@ describe("dbwrite", function(){
 });
 
 
+describe("Make CSV", function(){
+    var data = [{alef: 1, bet: 2, gimel: 3},
+		{alef: 3},
+		{bet: 5},
+		{dalet: 9}];
+    var fieldnames = [];
+    it("Should find out field names in a table", function(){
+	fieldnames = util.getAllFieldNames(data);
+	assert.equal(fieldnames.indexOf("alef") > -1, true);
+	assert.equal(fieldnames.indexOf("bet") > -1, true);
+	assert.equal(fieldnames.indexOf("gimel") > -1, true);
+	assert.equal(fieldnames.indexOf("dalet") > -1, true);
+	assert.equal(fieldnames.length, 4);
+    });
+    it("Should be able to tab separate values", function(){
+	var str0 = util.formTSVLine(data[0], fieldnames);
+	var str2 = util.formTSVLine(data[2], fieldnames);
+	assert.equal(str0, "1\t2\t3\t\n");
+	assert.equal(str2, "\t5\t\t\n");
+    });
+    it("Should give me back a nice TSV", function(done){
+	var req = {
+	    query: {
+		sourceurl: tempsourceurl,
+		experimentName: tempexperimentname
+	    }
+	};
+	var buf = "";
+	var res = {
+	    write: function(data){
+		buf += data;
+	    },
+	    end: function(data){
+		if(data)
+		    buf += data;
+		var lines = buf.split("\n");
+		assert.equal(lines.length, NTOWRITE+2); // +header + last final \n
+		assert.equal(lines[0].indexOf("userCode") > -1, true);
+		assert.equal(lines[0].indexOf("userFileName") > -1, true);
+		assert.equal(lines[0].indexOf("response") > -1, true);
+		assert.equal(lines[0].indexOf("sourceurl") > -1, true);
+		assert.equal(lines[0].indexOf("experimentName") > -1, true);
+		assert.equal(lines[0].indexOf("i") > -1, true);
+		var fieldnames = lines[0].split("\t");
+		assert.equal(fieldnames.length, 6);
+		var fields88 = lines[NTOWRITE-11].split("\t");
+		assert.equal(fields88.length, 6);
+		assert.equal(fields88[fieldnames.indexOf("experimentName")],
+			     tempexperimentname);
+		assert.equal(fields88[fieldnames.indexOf("response")],
+			     "good");
+		done();
+	    }
+	};
+	routing.routes["/makecsv"](req, res);
+    });
+});
 
 
-db.closeDB();
+describe("Removal", function(){	 
+    it("Should be able to remove an experiment", function(done){
+	db.removeExperiment(tempsourceurl, tempexperimentname, function(err, res){
+	    assert.equal(err, null);
+	    assert.ok(res.result);
+	    assert.equal(res.result.ok, 1);
+	    assert.equal(res.result.n, written+1);
+	    db.getAllData(tempsourceurl, tempexperimentname, function(err, results){
+		assert.equal(err, db.NOSUCHEXPERIMENT);
+		done();
+	    });
+	});
+    });
+});
+
+after("Cleaning up", function(){
+    db.closeDB();
+});

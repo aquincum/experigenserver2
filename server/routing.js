@@ -2,7 +2,8 @@
  * @module routing
  */
 var db = require("./db");
-
+var util = require("./util");
+var fs = require("fs");
 
 /**
  * Posts the version of the server to the client.
@@ -71,10 +72,54 @@ var dbWrite = function(req, res){
 };
 
 
+/**
+ * Takes the experiment name and source URL as argument and returns 
+ * the CSV. Directs it from a different destination if destination
+ * is not empty.
+ * Alert: the output is a *TSV* not a CSV, as per the old server.
+ */
+var makeCSV = function(req, res){
+    function fail(){
+	res.end("false\n"); // this is how the cgi died
+    }
+    if (!req.query) return fail();
+    var experimentName = req.query.experimentName,
+	sourceurl = req.query.sourceurl,
+	file = req.query.file;
+    if (!experimentName || !sourceurl){
+	return fail();
+    }
+    if(!file){
+	file = "default.csv";
+    }
+    db.getAllData(sourceurl, experimentName, file, function(err, data){
+	if(err){
+	    if(err == db.NOSUCHEXPERIMENT){ // ah let's just do this
+		res.end("No such experiment!");
+	    }
+	    else {
+		res.end(err);
+	    }
+	}
+	else {
+	    var fields = util.getAllFieldNames(data);// to be impl
+	    res.write(fields.join("\t") + "\n"); // header
+	    data.forEach(function(line){
+		res.write(util.formTSVLine(line, fields));
+	    });
+	    res.end();
+	    /*res.on("finish", function(){
+		// nothing to be done here now
+	    });*/
+	}
+    });
+};
+
 var routes = {
     "/version" : postVersion,
     "/getuserid" : getUserID,
-    "/dbwrite": dbWrite
+    "/dbwrite": dbWrite,
+    "/makecsv": makeCSV
 };
 
 /**
