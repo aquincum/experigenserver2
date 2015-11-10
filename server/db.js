@@ -75,10 +75,12 @@ module.exports.getAllData = function(sourceurl, experimentName, cb){
  * @param {Object} query The whole web query coming from `req`
  * @param {Function} cb Callback. Will be called with a boolean,
  * `true` for success and `false` with error.
+ * @param {number} errcnt Maximum times of failure to give up write
  */
-module.exports.write = function (query, cb){
+module.exports.write = function write(query, cb, errcnt){
     // I don't see the reason to clean up the fields as in server 1
     // except for the sourceURL and maybe UFN
+    if(!errcnt) errcnt = 3;
     query.sourceurl = util.cleanURL(query.sourceurl);
     query.userFileName = parseInt(query.userFileName, 10);
 
@@ -90,7 +92,16 @@ module.exports.write = function (query, cb){
 	var coll = db.collection(collname);
 	// push it up
 	coll.insert(query, {} , function(err, result){
-	    cb(!err);
+	    if(err && errcnt){
+		write(query, cb, errcnt-1);
+	    }
+	    else if (err){
+		console.log("Write error!");
+		cb(false);
+	    }
+	    else {
+		cb(true);
+	    }
 	});
     });
 };

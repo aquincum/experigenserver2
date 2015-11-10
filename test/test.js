@@ -77,7 +77,7 @@ describe("Hashing", function(){
 });
 
 describe("Database", function(){
-    var NTOWRITE = 100;
+    var NTOWRITE = 100, written = 0;
     it("Should connect", function(done){
 	db.getDB(function(err, db){
 	    assert.equal(err, null);
@@ -98,31 +98,29 @@ describe("Database", function(){
 				userCode: "Tester",
 				response: "good",
 				i: 0});
-	var writing = new Promise(function(resolve, reject){
-	    db.write(JSON.parse(q), resolve);
-	});
-	for(var i = 1; i < NTOWRITE; i++){
-	    writing = writing.then(new Promise(function(resolve, reject){
-		var inserted = JSON.parse(q);
-		inserted.i = i;
-		db.write(inserted, resolve);
-	    }));
-	}
-	writing.then(function(d){
-	    assert.equal(d, true);
+	var ran = 0;
+	function wrapup(){
+	    assert.equal(written, NTOWRITE);
 	    done();
-	});
-	writing.catch(function(){
-	    assert.equal(true, false);
-	});
+	}
+	function writecb(succ){
+	    if(succ) written ++;
+	    ran ++;
+	    if (ran == NTOWRITE) wrapup();
+	}
+	for(var i = 0; i < NTOWRITE; i++){
+	    var inserted = JSON.parse(q);
+	    inserted.i = i;
+	    db.write(inserted, writecb);
+	}
     });
     it("Should be able to give me back all the data in an Array", function(done){
 	db.getAllData(tempsourceurl, tempexperimentname, function(err, results){
 	    assert.equal(err, null);
-	    assert.equal(results.length, NTOWRITE);
+	    assert.equal(results.length, written);
 	    //	    assert.equal(results[432].i, 432);
 	    assert.equal(results[21].i >= 0, true);
-	    assert.equal(results[NTOWRITE-4].response, "good");
+	    assert.equal(results[written-4].response, "good");
 	    done();
 	});
     });
@@ -131,7 +129,7 @@ describe("Database", function(){
 	    assert.equal(err, null);
 	    assert.ok(res.result);
 	    assert.equal(res.result.ok, 1);
-	    assert.equal(res.result.n, NTOWRITE);
+	    assert.equal(res.result.n, written);
 	    db.getAllData(tempsourceurl, tempexperimentname, function(err, results){
 		assert.equal(err, db.NOSUCHEXPERIMENT);
 		done();
