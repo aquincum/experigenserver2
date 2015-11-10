@@ -8,6 +8,27 @@ var MongoClient = require("mongodb").MongoClient,
 var util = require("./util");
 
 
+/** Return error for query functions if experiment is not found.*/
+module.exports.NOSUCHEXPERIMENT = "No such experiment!";
+
+/**
+ * This will probably not be exposed in the API, but I want to be able
+ * to have all data removed. Think twice before using.
+ * @param {string} sourceurl The source URL
+ * @param {string} experimentName The experiment name
+ * @param {Function} cb An (err, results) style callback forwarded from
+ * mongodb directly
+ */
+module.exports.removeExperiment = function(sourceurl, experimentName, cb){
+    var cleanURL = util.cleanURL(sourceurl),
+	collname = util.createCollectionName(cleanURL, experimentName);
+    MongoClient.connect(url, function(err, db){
+	var coll = db.collection(collname);
+	coll.deleteMany({experimentName: experimentName}, cb);
+    });
+};
+
+
 
 /**
  * This function gets all of the data from the experiment denoted by
@@ -27,12 +48,15 @@ module.exports.getAllData = function(sourceurl, experimentName, cb){
     MongoClient.connect(url, function(err, db){
 	if(err) return cb(err);
 	var coll = db.collection(collname);
-	coll.find({experimentName: experimentName}, function(err, results){
+	coll.find({experimentName: experimentName}).toArray(function(err, results){
 	    if(err) return cb(err);
+	    if(results.length === 0){
+		cb(NOSUCHEXPERIMENT);
+	    }
 	    else cb(null, results);
-	}
+	});
     });
-}:
+};
 
 
 

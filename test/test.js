@@ -86,6 +86,45 @@ describe("Database", function(){
 	    assert.equal(result, 1);
 	});
     });
+    it("Should be able to write a lot of data", function(){
+	var q = {sourceurl: tempsourceurl,
+		 experimentName: tempexperimentname,
+		 userFileName: 1,
+		 userCode: "Tester",
+		 response: "good",
+		 i: 0};
+	var writing = new Promise(function(resolve, reject){
+	    db.write(q, resolve);
+	});
+	for(var i = 1; i < 1000; i++){
+	    writing = writing.then(new Promise(function(resolve, reject){
+		var inserted = q;
+		inserted.i = i;
+		db.write(inserted, resolve);
+	    }));
+	}
+	writing.then(function(d){
+	    assert.equal(d, true);
+	});
+	writing.catch(function(){
+	    assert.equal(true, false);
+	});
+    });
+    it("Should be able to give me back all the data in an Array", function(){
+	db.getAllData(tempsourceurl, tempexperimentname, function(err, results){
+	    assume.equal(results.length, 1000);
+	    assume.equal(results[432].i, 432);
+	});
+    });
+    it("Should be able to remove an experiment", function(){
+	db.removeExperiment(tempsourceurl, tempexperimentname, function(err, res){
+	    assert.equal(err, null);
+	    assert.equal(res.results.ok, 1);
+	    db.getAllData(tempsourceurl, tempexperimentname, function(err, results){
+		assume.equal(err, db.NOSUCHEXPERIMENT);
+	    });
+	});
+    });
 });
 
 describe("getuserid", function(){
