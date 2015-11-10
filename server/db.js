@@ -39,33 +39,45 @@ module.exports.removeExperiment = function(sourceurl, experimentName, cb){
  * should switch to a more stream-based way of working.
  * @param {string} sourceurl The source URL
  * @param {string} experimentName The experiment name
+ * @param {string} [destination] The destination CSV the data was sent.
+ * Conforming to the old CSV style, "default.csv" is the default, so
+ * data for which no destination was specified goes there. Also, it's 
+ * optional, so default is "default.csv", right.
  * @param {Function} cb An (err, results) style callback which is
  * given the results. It should return an error if no such experiment
  * is there in the db.
  */
-module.exports.getAllData = function(sourceurl, experimentName, cb){
+module.exports.getAllData = function(sourceurl, experimentName, destination, cb){
     var cleanURL = util.cleanURL(sourceurl),
 	collname = util.createCollectionName(cleanURL, experimentName);
-
+    if(typeof destination == "function" && !cb){
+	cb = destination;
+	destination = "default.csv";
+    }
+    if(destination == "default.csv"){
+	destination = {$exists: false};
+    }
     MongoClient.connect(url, function(err, db){
 	if(err) {
 	    return cb(err);
 	}
 	var coll = db.collection(collname);
-	coll.find({experimentName: experimentName}).toArray(function(err, results){
-	    if(err){
-		return cb(err);
-	    }
-	    if(results.length === 0){
-		cb(NOSUCHEXPERIMENT);
-	    }
-	    else {
-		cb(null, results);
-	    }
-	});
+	coll.find({experimentName: experimentName,
+		   destination:    destination})
+	    .toArray(function(err, results){
+		if(err){
+		    return cb(err);
+		}
+		if(results.length === 0){
+		    cb(NOSUCHEXPERIMENT);
+		}
+		else {
+		    cb(null, results);
+		}
+	    });
     });
-};
-
+      };
+    
 
 
 
