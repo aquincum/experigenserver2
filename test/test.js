@@ -78,6 +78,7 @@ describe("Hashing", function(){
 
 describe("Database", function(){
     var NTOWRITE = 100, written = 0;
+    this.timeout(10 * 1000);
     it("Should connect", function(done){
 	db.getDB(function(err, db){
 	    assert.equal(err, null);
@@ -106,13 +107,21 @@ describe("Database", function(){
 	function writecb(succ){
 	    if(succ) written ++;
 	    ran ++;
-	    if (ran == NTOWRITE) wrapup();
+	    if (ran == NTOWRITE+1) wrapup();
 	}
 	for(var i = 0; i < NTOWRITE; i++){
 	    var inserted = JSON.parse(q);
 	    inserted.i = i;
 	    db.write(inserted, writecb);
 	}
+	// let's write one more to a different destination.
+	var diffDest = JSON.parse(q);
+	diffDest.destination = "different.csv";
+	db.write(diffDest, function(succ){
+	    assert.equal(succ, true);
+	    ran++;
+	    if (ran == NTOWRITE+1) wrapup();
+	});
     });
     it("Should be able to give me back all the data in an Array", function(done){
 	db.getAllData(tempsourceurl, tempexperimentname, function(err, results){
@@ -124,12 +133,20 @@ describe("Database", function(){
 	    done();
 	});
     });
+    it("Should be able to write to a different destination", function(done){
+	db.getAllData(tempsourceurl, tempexperimentname, "different.csv", function(err, results){
+	    assert.equal(err, null);
+	    assert.equal(results.length, 1);
+	    assert.equal(results[0].destination, "different.csv");
+	    done();
+	});
+    });
     it("Should be able to remove an experiment", function(done){
 	db.removeExperiment(tempsourceurl, tempexperimentname, function(err, res){
 	    assert.equal(err, null);
 	    assert.ok(res.result);
 	    assert.equal(res.result.ok, 1);
-	    assert.equal(res.result.n, written);
+	    assert.equal(res.result.n, written+1);
 	    db.getAllData(tempsourceurl, tempexperimentname, function(err, results){
 		assert.equal(err, db.NOSUCHEXPERIMENT);
 		done();
