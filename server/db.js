@@ -9,7 +9,7 @@ var util = require("./util");
 
 
 /** Return error for query functions if experiment is not found.*/
-module.exports.NOSUCHEXPERIMENT = "No such experiment!";
+var NOSUCHEXPERIMENT = module.exports.NOSUCHEXPERIMENT = "No such experiment!";
 
 /**
  * This will probably not be exposed in the API, but I want to be able
@@ -24,7 +24,9 @@ module.exports.removeExperiment = function(sourceurl, experimentName, cb){
 	collname = util.createCollectionName(cleanURL, experimentName);
     MongoClient.connect(url, function(err, db){
 	var coll = db.collection(collname);
-	coll.deleteMany({experimentName: experimentName}, cb);
+	coll.deleteMany({experimentName: experimentName}, function(){
+	    cb.apply(null, arguments);
+	});
     });
 };
 
@@ -46,14 +48,20 @@ module.exports.getAllData = function(sourceurl, experimentName, cb){
 	collname = util.createCollectionName(cleanURL, experimentName);
 
     MongoClient.connect(url, function(err, db){
-	if(err) return cb(err);
+	if(err) {
+	    return cb(err);
+	}
 	var coll = db.collection(collname);
 	coll.find({experimentName: experimentName}).toArray(function(err, results){
-	    if(err) return cb(err);
+	    if(err){
+		return cb(err);
+	    }
 	    if(results.length === 0){
 		cb(NOSUCHEXPERIMENT);
 	    }
-	    else cb(null, results);
+	    else {
+		cb(null, results);
+	    }
 	});
     });
 };
@@ -75,7 +83,9 @@ module.exports.write = function (query, cb){
     query.userFileName = parseInt(query.userFileName, 10);
 
     MongoClient.connect(url, function(err, db){
-	if(err) return cb(false);
+	if(err){
+	    return cb(false);
+	}
 	var collname = util.createCollectionName(query.sourceurl, query.experimentName);
 	var coll = db.collection(collname);
 	// push it up
@@ -130,6 +140,14 @@ module.exports.getUserFileName = function(htmlSource, experimentName, cb){
 module.exports.getDB = function(cb){
     MongoClient.connect(url, {}, function(err, db){
 	cb(err, db);
-	db.close();
     });
 };
+
+/** Closes the database. I don't think it needs a callback,
+ * it really just closes the DB at the next available moment.
+ */
+module.exports.closeDB = function(){
+    MongoClient.connect(url, {}, function(err, db){
+	db.close(db);
+    });
+}

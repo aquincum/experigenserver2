@@ -9,18 +9,20 @@ var tempexperimentname = "000test000";
 // let's do this
 /* first */
 describe("Routing", function(){
-    it("Should route to functions to responses", function(){
+    it("Should route to functions to responses", function(done){
 	var mockServer = {
 	    get: function(path, func){
 		assert.equal(typeof func, "function");
 	    }
 	};
 	routing.route(mockServer);
+	done();
     });
-    it("Should give me back the version string", function(){
+    it("Should give me back the version string", function(done){
 	routing.routes["/version"]({}, {
 	    end: function(data){
 		assert.equal(data, require("../package.json").version);
+		done();
 	    }
 	});
     });
@@ -75,67 +77,79 @@ describe("Hashing", function(){
 });
 
 describe("Database", function(){
-    it("Should connect", function(){
+    var NTOWRITE = 100;
+    it("Should connect", function(done){
 	db.getDB(function(err, db){
 	    assert.equal(err, null);
 	    assert.ok(db);
+	    done();
 	});
     });
-    it("Should give me 1 as userfilename in a new experiment", function(){
-	db.getUserFileName(tempsourceurl, tempexperimentname, function(result){
+    it("Should give me 1 as userfilename in a new experiment", function(done){
+	db.getUserFileName(tempsourceurl, tempexperimentname + "even.newer", function(result){
 	    assert.equal(result, 1);
+	    done();
 	});
     });
-    it("Should be able to write a lot of data", function(){
-	var q = {sourceurl: tempsourceurl,
-		 experimentName: tempexperimentname,
-		 userFileName: 1,
-		 userCode: "Tester",
-		 response: "good",
-		 i: 0};
+    it("Should be able to write a lot of data", function(done){
+	var q = JSON.stringify({sourceurl: tempsourceurl,
+				experimentName: tempexperimentname,
+				userFileName: 1,
+				userCode: "Tester",
+				response: "good",
+				i: 0});
 	var writing = new Promise(function(resolve, reject){
-	    db.write(q, resolve);
+	    db.write(JSON.parse(q), resolve);
 	});
-	for(var i = 1; i < 1000; i++){
+	for(var i = 1; i < NTOWRITE; i++){
 	    writing = writing.then(new Promise(function(resolve, reject){
-		var inserted = q;
+		var inserted = JSON.parse(q);
 		inserted.i = i;
 		db.write(inserted, resolve);
 	    }));
 	}
 	writing.then(function(d){
 	    assert.equal(d, true);
+	    done();
 	});
 	writing.catch(function(){
 	    assert.equal(true, false);
 	});
     });
-    it("Should be able to give me back all the data in an Array", function(){
+    it("Should be able to give me back all the data in an Array", function(done){
 	db.getAllData(tempsourceurl, tempexperimentname, function(err, results){
-	    assume.equal(results.length, 1000);
-	    assume.equal(results[432].i, 432);
+	    assert.equal(err, null);
+	    assert.equal(results.length, NTOWRITE);
+	    //	    assert.equal(results[432].i, 432);
+	    assert.equal(results[21].i >= 0, true);
+	    assert.equal(results[NTOWRITE-4].response, "good");
+	    done();
 	});
     });
-    it("Should be able to remove an experiment", function(){
+    it("Should be able to remove an experiment", function(done){
 	db.removeExperiment(tempsourceurl, tempexperimentname, function(err, res){
 	    assert.equal(err, null);
-	    assert.equal(res.results.ok, 1);
+	    assert.ok(res.result);
+	    assert.equal(res.result.ok, 1);
+	    assert.equal(res.result.n, NTOWRITE);
 	    db.getAllData(tempsourceurl, tempexperimentname, function(err, results){
-		assume.equal(err, db.NOSUCHEXPERIMENT);
+		assert.equal(err, db.NOSUCHEXPERIMENT);
+		done();
 	    });
 	});
     });
 });
 
 describe("getuserid", function(){
-    it("Should give back 0 if problems in request", function(){
+    it("Should give back 0 if problems in request", function(done){
 	routing.routes["/getuserid"]({query: {}}, {
 	    end: function(data){
 		assert.equal(data, '("0")');
+		done();
 	    }
 	});
     });
-    it("Should give back 1 if new experiment", function(){
+    it("Should give back 1 if new experiment", function(done){
 	routing.routes["/getuserid"](
 	{ query: {
 	    sourceurl: tempsourceurl,
@@ -143,16 +157,23 @@ describe("getuserid", function(){
 	}}, {
 	    end: function(data){
 		assert.equal(data, '("1")');
+		done();
 	    }
 	});
     });
 });
 
 describe("dbwrite", function(){
-    it("Should fail if request is faulty", function(){
+    it("Should fail if request is faulty", function(done){
+	var dones = 4;
+	function doneifdone(){
+	    dones -= 1;
+	    if(dones === 0) done();
+	}
 	routing.routes["/dbwrite"]({query: {}}, {
 	    end: function(data){
 		assert.equal(data, '("false")');
+		doneifdone();
 	    }
 	});
 	routing.routes["/dbwrite"]({query: {
@@ -162,6 +183,7 @@ describe("dbwrite", function(){
 	}}, {
 	    end: function(data){
 		assert.equal(data, '("false")');
+		doneifdone();
 	    }
 	});
 	routing.routes["/dbwrite"]({query: {
@@ -169,15 +191,17 @@ describe("dbwrite", function(){
 	}}, {
 	    end: function(data){
 		assert.equal(data, '("false")');
+		doneifdone();
 	    }
 	});
 	routing.routes["/dbwrite"]({}, {
 	    end: function(data){
 		assert.equal(data, '("false")');
+		doneifdone();
 	    }
 	});
     });
-    it("Should otherwise write to the database", function(){
+    it("Should otherwise write to the database", function(done){
 	var now = new Date();
 	var q = {
 	    query: {
@@ -193,14 +217,15 @@ describe("dbwrite", function(){
 	    end: function(data){
 		assert.equal(data, "(\"true\")");
 		db.getDB(function(err, _db){
-		    var collname = util.createCollectionName(q.sourceurl, q.experimentName);
+		    var collname = util.createCollectionName(q.query.sourceurl, q.query.experimentName);
 		    _db.collection(collname).findOne({info: now.getTime()}, function(err, doc){
-			assume.equal(err, null);
-			assume.equal(doc.userCode, "Tester");
-			assume.equal(doc.ip, "127.0.0.1");
+			assert.equal(err, null);
+			assert.equal(doc.userCode, "Tester");
+			assert.equal(doc.IP, "127.0.0.1");
 			_db.collection(collname).remove({info: now.getTime()}, function(err, result){
-			    assume.equal(err, null);
-			    assume.equal(result.result.n, 1);
+			    assert.equal(err, null);
+			    assert.equal(result.result.n, 1);
+			    done();
 			});
 		    });
 		});
@@ -208,3 +233,8 @@ describe("dbwrite", function(){
 	});
     });
 });
+
+
+
+
+db.closeDB();
