@@ -11,6 +11,45 @@ var util = require("./util");
 /** Return error for query functions if experiment is not found.*/
 var NOSUCHEXPERIMENT = module.exports.NOSUCHEXPERIMENT = "No such experiment!";
 
+
+/**
+ * Returns a map of usercode/number combination, as summarized from the
+ * database. The return to the callback is literally a hash map object.
+ * @param {string} sourceurl The source URL
+ * @param {string} experimentName The experiment name
+ * @param {Function} cb An (err, users) style callback, where users is
+ * an [{Object}] with each Object having a `userCode` and a `records`
+ * field. Returns err with error, {@link module:db~NOSUCHEXPERIMENT}
+ * if no such experiment, otherwise err==null;
+ */
+module.exports.users = function(sourceurl, experimentName, cb){
+    var cleanURL = util.cleanURL(sourceurl),
+	collname = util.createCollectionName(cleanURL, experimentName);
+    MongoClient.connect(url, function(err, db){
+	var coll = db.collection(collname);
+	coll.aggregate([
+	    { $match: {experimentName: experimentName}},
+	    { $project: {userCode: 1}},
+	    { $group: {_id: "$userCode", records: {$sum: 1}}}
+	], function(err, users){
+	    if(err){
+		cb(err);
+	    }
+	    else if (users.length === 0){
+		cb(NOSUCHEXPERIMENT);
+	    }
+	    else {
+		users.forEach(function(u){
+		    u.userCode = u._id;
+		    delete u._id;
+		});
+		cb(null,users);
+	    }
+	});
+    });
+};
+
+
 /**
  * This will probably not be exposed in the API, but I want to be able
  * to have all data removed. Think twice before using.

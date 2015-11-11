@@ -93,33 +93,68 @@ var makeCSV = function(req, res){
 	file = "default.csv";
     }
     db.getAllData(sourceurl, experimentName, file, function(err, data){
-	if(err){
-	    if(err == db.NOSUCHEXPERIMENT){ // ah let's just do this
-		res.end("No such experiment!");
-	    }
-	    else {
-		res.end(err);
-	    }
-	}
-	else {
-	    var fields = util.getAllFieldNames(data);// to be impl
-	    res.write(fields.join("\t") + "\n"); // header
-	    data.forEach(function(line){
-		res.write(util.formTSVLine(line, fields));
-	    });
-	    res.end();
-	    /*res.on("finish", function(){
-		// nothing to be done here now
-	    });*/
-	}
+	writeObjectsToClient(err, data, res);
     });
 };
+
+
+/**
+ * Writes out an array of Objects or an error response. Used by both
+ * makecsv and users.
+ * @param err Error object or null if no error
+ * @param {Object[]} data Array of objects to write out
+ * @param {Express.response} res The response object.
+ * @param {Function} [cb] An optional callback to be called after
+ * writeout
+ */
+var writeObjectsToClient = function(err, data, res, cb){
+    if(err){
+	if(err == db.NOSUCHEXPERIMENT){ // ah let's just do this
+	    res.end("No such experiment!");
+	}
+	else {
+	    res.end("Error: " + err);
+	}
+    }
+    else {
+	var fields = util.getAllFieldNames(data);// to be impl
+	res.write(fields.join("\t") + "\n"); // header
+	data.forEach(function(line){
+	    res.write(util.formTSVLine(line, fields));
+	});
+	res.end();
+	if(cb){
+	    res.on("finish", cb);
+	}
+    }
+};
+    
+
+/**
+ * Returns the usercode/number of records table.
+ */
+var getUsers = function(req, res){
+    function fail(){
+	res.end("false\n"); // this is how the cgi died
+    }
+    if (!req.query) return fail();
+    var experimentName = req.query.experimentName,
+	sourceurl = req.query.sourceurl;
+    if (!experimentName || !sourceurl){
+	return fail();
+    }
+    db.users(sourceurl, experimentName, function(err,data){
+	writeObjectsToClient(err, data, res);
+    });
+};
+
 
 var routes = {
     "/version" : postVersion,
     "/getuserid" : getUserID,
     "/dbwrite": dbWrite,
-    "/makecsv": makeCSV
+    "/makecsv": makeCSV,
+    "/users": getUsers
 };
 
 /**

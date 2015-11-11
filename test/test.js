@@ -112,12 +112,14 @@ describe("Database", function(){
 	for(var i = 0; i < NTOWRITE; i++){
 	    var inserted = JSON.parse(q);
 	    inserted.i = i;
+	    if(i%15 === 0) inserted.userCode = "TesterFizzBuzz";
 	    db.write(inserted, writecb);
 	}
 	// let's write one more to a different destination.
 	var diffDest = JSON.parse(q);
 	diffDest.destination = "different.csv";
 	diffDest.fieldOnlyHere = 1;
+	diffDest.userCode = "WeirdTester";
 	delete diffDest.i;
 	db.write(diffDest, function(succ){
 	    assert.equal(succ, true);
@@ -331,7 +333,7 @@ describe("Make CSV", function(){
 		file: "different.csv"
 	    }
 	};
-	var buf;
+	var buf = "";
 	var res = {
 	    write: function(data){
 		buf += data;
@@ -353,6 +355,69 @@ describe("Make CSV", function(){
 	};
 	routing.routes["/makecsv"](req, res);
 	
+    });
+});
+
+
+describe("users.csv", function(){
+    it("Should tell me if there's no such experiment", function(done){
+	var req = {
+	    query: {
+		sourceurl: tempsourceurl,
+		experimentName: tempexperimentname + "doesntexist"
+	    }
+	};
+	var res = {
+	    end: function(data){
+		assert.equal(data, "No such experiment!");
+		done();
+	    }
+	};
+	routing.routes["/users"](req, res);
+    });
+    it("Should give me back a valid record count", function(done){
+	var fizzbuzzexpected = Math.floor(NTOWRITE / 15) + 1,
+	    plainexpected = NTOWRITE - fizzbuzzexpected,
+	    req = {query: {
+		sourceurl: tempsourceurl,
+		experimentName: tempexperimentname
+	    }},
+	    buf = "",
+	    res = {
+		write: function(data){
+		    buf += data;
+		},
+		end: function(data){
+		    if(data)
+			buf += data;
+		    var lines = buf.split("\n");
+		    assert.equal(lines.length, 5); // header+plain+fizzbuzz+weird+nl
+		    var fn = lines[0].split("\t");
+		    assert.equal(fn.length, 2);
+		    assert.equal(fn.indexOf("userCode") > -1, true);
+		    assert.equal(fn.indexOf("records") > -1, true);
+		    for(var i = 1; i < 4; i++){
+			var fields = lines[i].split("\t"),
+			    uc = fields[fn.indexOf("userCode")],
+			    rec = fields[fn.indexOf("records")];
+			switch (uc){
+			case "Tester":
+			    assert.equal(rec, plainexpected.toString());
+			    break;
+			case "TesterFizzBuzz":
+			    assert.equal(rec, fizzbuzzexpected.toString());
+			    break;
+			case "WeirdTester":
+			    assert.equal(rec, "1");
+			    break;
+			default:
+			    assert.equal(true, false);
+			}
+		    }
+		    done();
+		}		    
+	    };
+	routing.routes["/users"](req, res);
     });
 });
 
