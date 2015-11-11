@@ -3,7 +3,7 @@ var routing = require("../server/routing");
 var db = require("../server/db");
 var util = require("../server/util");
 
-var NTOWRITE = 100
+var NTOWRITE = 100;
 var tempsourceurl = "http://localhost/testing/now";
 var tempexperimentname = "000test000";
 var written = 0;
@@ -117,6 +117,8 @@ describe("Database", function(){
 	// let's write one more to a different destination.
 	var diffDest = JSON.parse(q);
 	diffDest.destination = "different.csv";
+	diffDest.fieldOnlyHere = 1;
+	delete diffDest.i;
 	db.write(diffDest, function(succ){
 	    assert.equal(succ, true);
 	    ran++;
@@ -305,6 +307,52 @@ describe("Make CSV", function(){
 	    }
 	};
 	routing.routes["/makecsv"](req, res);
+    });
+    it("Should tell me if there's no such experiment", function(done){
+	var req = {
+	    query: {
+		sourceurl: tempsourceurl,
+		experimentName: tempexperimentname + "doesntexist"
+	    }
+	};
+	var res = {
+	    end: function(data){
+		assert.equal(data, "No such experiment!");
+		done();
+	    }
+	};
+	routing.routes["/makecsv"](req, res);
+    });
+    it("Should read other CSV's than the default", function(done){
+	var req = {
+	    query: {
+		sourceurl: tempsourceurl,
+		experimentName: tempexperimentname,
+		file: "different.csv"
+	    }
+	};
+	var buf;
+	var res = {
+	    write: function(data){
+		buf += data;
+	    },
+	    end: function(data){
+		if(data)
+		    buf += data;
+		var lines = buf.split("\n");
+		assert.equal(lines.length, 3); // header + newline + line
+		var fns = lines[0].split("\t"),
+		    dataline = lines[1].split("\t");
+		assert.equal(fns.indexOf("destination") > -1, true);
+		assert.equal(fns.indexOf("fieldOnlyHere") > -1, true);
+		assert.equal(fns.indexOf("i"), -1);
+		assert.equal(dataline[fns.indexOf("destination")], "different.csv");
+		assert.equal(dataline[fns.indexOf("fieldOnlyHere")], "1");
+		done();
+	    }
+	};
+	routing.routes["/makecsv"](req, res);
+	
     });
 });
 
