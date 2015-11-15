@@ -437,6 +437,65 @@ describe("Removal", function(){
     });
 });
 
+describe("Stresstest", function(){
+    var STRESSN = 100000;
+    this.timeout(100 * 1000);
+    it("Should be able to write " + STRESSN + " documents", function(done){
+	db.getDB(function(err, db){
+	    assert.equal(err, null);
+	    var collname = util.createCollectionName(util.cleanURL(tempsourceurl), tempexperimentname + ".stresstest");
+	    var coll = db.collection(collname);
+	    var docs = [];
+	    for(var i = 0; i < STRESSN; i++){
+		docs.push({experimentName: tempexperimentname + ".stresstest",
+			   val: i});
+	    }
+	    assert.equal(docs.length, STRESSN);
+	    coll.insertMany(docs, function(err, r){
+		console.log("ERR: " + err);
+		console.log("R: " + r);
+		assert.equal(err, null);
+		assert.equal(r.insertedCount, STRESSN);
+		done();
+	    });
+	});
+    });
+    it("Should be able to get the TSV", function(done){
+	var req = {
+	    query: {
+		sourceurl: tempsourceurl,
+		experimentName: tempexperimentname + ".stresstest"
+	    }
+	};
+	var buf = "";
+	var res = {
+	    write: function(data){
+		buf += data;
+	    },
+	    end: function(data){
+		if(data)
+		    buf += data;
+		var lines = buf.split("\n");
+		assert.equal(lines.length, STRESSN+2); // +header + last final \n
+		assert.equal(lines[0].indexOf("i") > -1, true);
+		done();
+	    }
+	};
+	routing.routes["/makecsv"](req, res);
+    });
+    it("Should be able to clean up", function(done){
+	db.removeExperiment(tempsourceurl, tempexperimentname + ".stresstest", function(err, res){
+	    assert.equal(err, null);
+	    assert.ok(res.result);
+	    assert.equal(res.result.ok, 1);
+	    assert.equal(res.result.n, STRESSN);
+	    done();
+	});	
+    });
+});
+
+	 
 after("Cleaning up", function(){
     db.closeDB();
 });
+
