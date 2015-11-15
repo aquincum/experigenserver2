@@ -139,23 +139,31 @@ module.exports.write = function write(query, cb, errcnt){
 
     MongoClient.connect(url, function(err, db){
 	if(err){
-	    return cb(false);
-	}
-	var collname = util.createCollectionName(query.sourceurl, query.experimentName);
-	var coll = db.collection(collname);
-	// push it up
-	coll.insert(query, {} , function(err, result){
 	    if(err && errcnt){
-		write(query, cb, errcnt-1);
+		return write(query, cb, errcnt-1);
 	    }
 	    else if (err){
-		console.log("Write error!");
-		cb(false);
+		console.log("DB connection error!");
+		return cb(false);
 	    }
-	    else {
-		cb(true);
-	    }
-	});
+	}
+	else{
+	    var collname = util.createCollectionName(query.sourceurl, query.experimentName);
+	    var coll = db.collection(collname);
+	    // push it up
+	    coll.insert(query, {} , function(err, result){
+		if(err && errcnt){
+		    return write(query, cb, errcnt-1);
+		}
+		else if (err){
+		    console.log("Write error!");
+		    cb(false);
+		}
+		else {
+		    cb(true);
+		}
+	    });
+	}
     });
 };
 
