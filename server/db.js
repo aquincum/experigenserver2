@@ -16,7 +16,7 @@ var NOSUCHEXPERIMENT = module.exports.NOSUCHEXPERIMENT = "No such experiment!";
 
 /**
  * Returns a map of usercode/number combination, as summarized from the
- * database. The return to the callback is literally a hash map object.
+ * database. The return to the callback is an object array.
  * @param {string} sourceurl The source URL
  * @param {string} experimentName The experiment name
  * @param {Function} cb An (err, users) style callback, where users is

@@ -1,6 +1,5 @@
 /*eslint-env node*/
 
-var http = require("http");
 var express = require("express");
 var routing = require("./server/routing");
 var argv = require("yargs").usage("Usage: $0 [options]")
@@ -21,9 +20,10 @@ var argv = require("yargs").usage("Usage: $0 [options]")
 /* ----------------------------------------------- */
 
 var server = express();
-//server.set("view engine", "ejs");
 routing.route(server, argv.e);
-
+server.use(express.static("public"), {
+    extensions: ["html"]
+});
 
 
 server.listen(parseInt(argv.p, 10));

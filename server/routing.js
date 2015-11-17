@@ -150,7 +150,6 @@ var getUsers = function(req, res){
     });
 };
 
-
 var routes = {
     "/version" : postVersion,
     "/getuserid" : getUserID,
