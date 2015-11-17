@@ -1,3 +1,5 @@
+/*eslint-env node*/
+
 /** Handles the routing on the server 
  * @module routing
  */

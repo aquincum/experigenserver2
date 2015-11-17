@@ -2,6 +2,7 @@ var assert = require("assert");
 var routing = require("../server/routing");
 var db = require("../server/db");
 var util = require("../server/util");
+var fs = require("fs");
 
 var NTOWRITE = 100;
 var tempsourceurl = "http://localhost/testing/now";
@@ -463,7 +464,7 @@ describe("Removal", function(){
     });
 });
 
-describe("Stresstest", function(){
+describe.skip("Stresstest", function(){
     var STRESSN = 100000;
     this.timeout(100 * 1000);
     it("Should be able to write " + STRESSN + " documents", function(done){
@@ -517,6 +518,28 @@ describe("Stresstest", function(){
 	    assert.equal(res.result.n, STRESSN);
 	    done();
 	});	
+    });
+});
+
+describe("Logging", function(){
+    it("Should write to log", function(done){
+        util.Logger.setFile("test.log");
+        util.Logger.log("Heyho 1");
+        util.Logger.log("Heyho 2");
+        fs.readFile("test.log", "utf8", function(err, data){
+            assert.equal(err, null);
+            assert.equal(data.split("\n").length, 3);
+            assert.equal(data.split("\n")[0].split("\t").length, 2);
+            assert.equal(data.split("\n")[0].split("\t")[1], "Heyho 1");
+            done();
+        });
+    });
+    it("Should clear up after itself", function(done){
+        util.Logger.clear();
+        fs.access("test.log", function(err, stats){
+            assert.ok(err);
+            done();
+        });
     });
 });
 

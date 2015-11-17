@@ -1,8 +1,11 @@
+/*eslint-env node*/
+
 /** Utility tools for other modules
  * @module util
  */
 
 var fnv = require("fnv-plus");
+var fs = require("fs");
 
 
 /**
@@ -15,7 +18,7 @@ module.exports.getAllFieldNames = function(data){
     var fieldlist = [];
     data.forEach(function(elem){
         for(var f in elem){
-            if( fieldlist.indexOf(f) === -1){
+            if(fieldlist.indexOf(f) === -1){
                 fieldlist.push(f);
             }
         }
@@ -88,3 +91,27 @@ module.exports.hash = hash;
 module.exports.createCollectionName = function(sourceHtml, experimentName){
     return "exp" + hash(sourceHtml) + hash(experimentName);
 };
+
+
+/**
+ * For logging events happening while running
+ * @class
+ */
+module.exports.Logger = {
+    /** The file to save */
+    file: "experigenserver.log",
+    /** Change the log file */
+    setFile: function(f) {
+        this.file = f;
+    },
+    /** Clear the log file */
+    clear: function() {
+        fs.unlink(this.file);
+    },
+    /** Log some message with timestamp */
+    log: function(s){
+        var msg = (new Date()).toString() + "\t" + s + "\n";
+        fs.appendFile(this.file, msg);
+    }
+};
+

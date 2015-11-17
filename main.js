@@ -1,3 +1,5 @@
+/*eslint-env node*/
+
 var http = require("http");
 var express = require("express");
 var routing = require("./server/routing");

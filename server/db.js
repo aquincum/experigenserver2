@@ -1,3 +1,5 @@
+/*eslint-env node*/
+
 /** This module contains functions to interact with the database
  * (MongoDB for now).
  * @module db  
@@ -143,7 +145,7 @@ module.exports.write = function write(query, cb, errcnt){
                 return write(query, cb, errcnt-1);
             }
             else if (err){
-                console.log("DB connection error!");
+                util.Logger.log("DB connection error!");
                 return cb(false);
             }
         }
@@ -156,7 +158,7 @@ module.exports.write = function write(query, cb, errcnt){
                     return write(query, cb, errcnt-1);
                 }
                 else if (err){
-                    console.log("Write error!");
+                    util.Logger.log("Write error!");
                     cb(false);
                 }
                 else {
