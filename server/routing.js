@@ -11,11 +11,11 @@ var fs = require("fs");
  */
 var postVersion = function(req, res){
     if(process.env.npm_package_version){
-	res.end(process.env.npm_package_version); // npm start
+        res.end(process.env.npm_package_version); // npm start
     }
     else {
-	var pjson = require("../package.json");
-	res.end(pjson.version); // node server.js
+        var pjson = require("../package.json");
+        res.end(pjson.version); // node server.js
     }
 };
 
@@ -25,14 +25,14 @@ var postVersion = function(req, res){
  */
 var getUserID = function(req, res){
     var html = req.query.sourceurl,
-	expname = req.query.experimentName;
+        expname = req.query.experimentName;
     if(!html || !expname) {
-	res.end("(\"0\")");
+        res.end("(\"0\")");
     }
     else {
-	db.getUserFileName(html, expname, function (ufn){
-	    res.end("(\"" + ufn.toString() + "\")");
-	});
+        db.getUserFileName(html, expname, function (ufn){
+            res.end("(\"" + ufn.toString() + "\")");
+        });
     }
 };
 
@@ -45,16 +45,16 @@ var getUserID = function(req, res){
  */
 var dbWrite = function(req, res){
     function fail(){
-	res.end("(\"false\")"); // this is how the cgi died
+        res.end("(\"false\")"); // this is how the cgi died
     }
     if (!req.query) return fail();
     // necessary fields
     var ufn = req.query.userFileName,
-	userCode = req.query.userCode,
-	experimentName = req.query.experimentName,
-	sourceurl = req.query.sourceurl;
+        userCode = req.query.userCode,
+        experimentName = req.query.experimentName,
+        sourceurl = req.query.sourceurl;
     if (!ufn || !userCode || !experimentName || !sourceurl){
-	return fail();
+        return fail();
     }
     // add IP and time
     var query = req.query;
@@ -62,12 +62,12 @@ var dbWrite = function(req, res){
     query.time = (new Date()).getTime();
     // let's pass on everything now to the db, I'll clean up there.
     db.write(query, function (success){
-	if(success){
-	    res.end("(\"true\")");
-	}
-	else {
-	    fail();
-	}
+        if(success){
+            res.end("(\"true\")");
+        }
+        else {
+            fail();
+        }
     });
 };
 
@@ -80,20 +80,20 @@ var dbWrite = function(req, res){
  */
 var makeCSV = function(req, res){
     function fail(){
-	res.end("false\n"); // this is how the cgi died
+        res.end("false\n"); // this is how the cgi died
     }
     if (!req.query) return fail();
     var experimentName = req.query.experimentName,
-	sourceurl = req.query.sourceurl,
-	file = req.query.file;
+        sourceurl = req.query.sourceurl,
+        file = req.query.file;
     if (!experimentName || !sourceurl){
-	return fail();
+        return fail();
     }
     if(!file){
-	file = "default.csv";
+        file = "default.csv";
     }
     db.getAllData(sourceurl, experimentName, file, function(err, data){
-	writeObjectsToClient(err, data, res);
+        writeObjectsToClient(err, data, res);
     });
 };
 
@@ -109,42 +109,42 @@ var makeCSV = function(req, res){
  */
 var writeObjectsToClient = function(err, data, res, cb){
     if(err){
-	if(err == db.NOSUCHEXPERIMENT){ // ah let's just do this
-	    res.end("No such experiment!");
-	}
-	else {
-	    res.end("Error: " + err);
-	}
+        if(err == db.NOSUCHEXPERIMENT){ // ah let's just do this
+            res.end("No such experiment!");
+        }
+        else {
+            res.end("Error: " + err);
+        }
     }
     else {
-	var fields = util.getAllFieldNames(data);// to be impl
-	res.write(fields.join("\t") + "\n"); // header
-	data.forEach(function(line){
-	    res.write(util.formTSVLine(line, fields));
-	});
-	res.end();
-	if(cb){
-	    res.on("finish", cb);
-	}
+        var fields = util.getAllFieldNames(data);// to be impl
+        res.write(fields.join("\t") + "\n"); // header
+        data.forEach(function(line){
+            res.write(util.formTSVLine(line, fields));
+        });
+        res.end();
+        if(cb){
+            res.on("finish", cb);
+        }
     }
 };
-    
+
 
 /**
  * Returns the usercode/number of records table.
  */
 var getUsers = function(req, res){
     function fail(){
-	res.end("false\n"); // this is how the cgi died
+        res.end("false\n"); // this is how the cgi died
     }
     if (!req.query) return fail();
     var experimentName = req.query.experimentName,
-	sourceurl = req.query.sourceurl;
+        sourceurl = req.query.sourceurl;
     if (!experimentName || !sourceurl){
-	return fail();
+        return fail();
     }
     db.users(sourceurl, experimentName, function(err,data){
-	writeObjectsToClient(err, data, res);
+        writeObjectsToClient(err, data, res);
     });
 };
 
@@ -171,9 +171,9 @@ module.exports.routes = routes;
  */
 module.exports.route = function doRouting(server, emulate) {
     for(var path in routes){
-	server.get(path, routes[path]);
-	if(emulate){
-	    server.get(path + ".cgi", routes[path]);
-	}
+        server.get(path, routes[path]);
+        if(emulate){
+            server.get(path + ".cgi", routes[path]);
+        }
     }
 };

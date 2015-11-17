@@ -14,11 +14,11 @@ var fnv = require("fnv-plus");
 module.exports.getAllFieldNames = function(data){
     var fieldlist = [];
     data.forEach(function(elem){
-	for(var f in elem){
-	    if( fieldlist.indexOf(f) === -1){
-		fieldlist.push(f);
-	    }
-	}
+        for(var f in elem){
+            if( fieldlist.indexOf(f) === -1){
+                fieldlist.push(f);
+            }
+        }
     });
     return fieldlist;
 };
@@ -34,12 +34,12 @@ module.exports.getAllFieldNames = function(data){
 module.exports.formTSVLine = function(o, fields){
     var vals = [];
     fields.forEach(function(fieldname){
-	if(o[fieldname]){
-	    vals.push(o[fieldname]);
-	}
-	else {
-	    vals.push("");
-	}
+        if(o[fieldname]){
+            vals.push(o[fieldname]);
+        }
+        else {
+            vals.push("");
+        }
     });
     return (vals.join("\t") + "\n");
 };

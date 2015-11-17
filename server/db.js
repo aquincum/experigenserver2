@@ -24,28 +24,28 @@ var NOSUCHEXPERIMENT = module.exports.NOSUCHEXPERIMENT = "No such experiment!";
  */
 module.exports.users = function(sourceurl, experimentName, cb){
     var cleanURL = util.cleanURL(sourceurl),
-	collname = util.createCollectionName(cleanURL, experimentName);
+        collname = util.createCollectionName(cleanURL, experimentName);
     MongoClient.connect(url, function(err, db){
-	var coll = db.collection(collname);
-	coll.aggregate([
-	    { $match: {experimentName: experimentName}},
-	    { $project: {userCode: 1}},
-	    { $group: {_id: "$userCode", records: {$sum: 1}}}
-	], function(err, users){
-	    if(err){
-		cb(err);
-	    }
-	    else if (users.length === 0){
-		cb(NOSUCHEXPERIMENT);
-	    }
-	    else {
-		users.forEach(function(u){
-		    u.userCode = u._id;
-		    delete u._id;
-		});
-		cb(null,users);
-	    }
-	});
+        var coll = db.collection(collname);
+        coll.aggregate([
+            { $match: {experimentName: experimentName}},
+            { $project: {userCode: 1}},
+            { $group: {_id: "$userCode", records: {$sum: 1}}}
+        ], function(err, users){
+            if(err){
+                cb(err);
+            }
+            else if (users.length === 0){
+                cb(NOSUCHEXPERIMENT);
+            }
+            else {
+                users.forEach(function(u){
+                    u.userCode = u._id;
+                    delete u._id;
+                });
+                cb(null,users);
+            }
+        });
     });
 };
 
@@ -60,12 +60,12 @@ module.exports.users = function(sourceurl, experimentName, cb){
  */
 module.exports.removeExperiment = function(sourceurl, experimentName, cb){
     var cleanURL = util.cleanURL(sourceurl),
-	collname = util.createCollectionName(cleanURL, experimentName);
+        collname = util.createCollectionName(cleanURL, experimentName);
     MongoClient.connect(url, function(err, db){
-	var coll = db.collection(collname);
-	coll.deleteMany({experimentName: experimentName}, function(){
-	    cb.apply(null, arguments);
-	});
+        var coll = db.collection(collname);
+        coll.deleteMany({experimentName: experimentName}, function(){
+            cb.apply(null, arguments);
+        });
     });
 };
 
@@ -88,37 +88,37 @@ module.exports.removeExperiment = function(sourceurl, experimentName, cb){
  */
 module.exports.getAllData = function(sourceurl, experimentName, destination, cb){
     var cleanURL = util.cleanURL(sourceurl),
-	collname = util.createCollectionName(cleanURL, experimentName);
+        collname = util.createCollectionName(cleanURL, experimentName);
     if(typeof destination == "function" && !cb){
-	cb = destination;
-	destination = "default.csv";
+        cb = destination;
+        destination = "default.csv";
     }
     if(destination == "default.csv"){
-	destination = {$exists: false};
+        destination = {$exists: false};
     }
     MongoClient.connect(url, function(err, db){
-	if(err) {
-	    return cb(err);
-	}
-	var coll = db.collection(collname);
-	coll.find({experimentName: experimentName,
-		   destination:    destination},
-		  { _id: 0 }
-		 )
-	    .toArray(function(err, results){
-		if(err){
-		    return cb(err);
-		}
-		if(results.length === 0){
-		    cb(NOSUCHEXPERIMENT);
-		}
-		else {
-		    cb(null, results);
-		}
-	    });
+        if(err) {
+            return cb(err);
+        }
+        var coll = db.collection(collname);
+        coll.find({experimentName: experimentName,
+                   destination:    destination},
+                  { _id: 0 }
+                 )
+            .toArray(function(err, results){
+                if(err){
+                    return cb(err);
+                }
+                if(results.length === 0){
+                    cb(NOSUCHEXPERIMENT);
+                }
+                else {
+                    cb(null, results);
+                }
+            });
     });
-      };
-    
+};
+
 
 
 
@@ -138,32 +138,32 @@ module.exports.write = function write(query, cb, errcnt){
     query.userFileName = parseInt(query.userFileName, 10);
 
     MongoClient.connect(url, function(err, db){
-	if(err){
-	    if(err && errcnt){
-		return write(query, cb, errcnt-1);
-	    }
-	    else if (err){
-		console.log("DB connection error!");
-		return cb(false);
-	    }
-	}
-	else{
-	    var collname = util.createCollectionName(query.sourceurl, query.experimentName);
-	    var coll = db.collection(collname);
-	    // push it up
-	    coll.insert(query, {} , function(err, result){
-		if(err && errcnt){
-		    return write(query, cb, errcnt-1);
-		}
-		else if (err){
-		    console.log("Write error!");
-		    cb(false);
-		}
-		else {
-		    cb(true);
-		}
-	    });
-	}
+        if(err){
+            if(err && errcnt){
+                return write(query, cb, errcnt-1);
+            }
+            else if (err){
+                console.log("DB connection error!");
+                return cb(false);
+            }
+        }
+        else{
+            var collname = util.createCollectionName(query.sourceurl, query.experimentName);
+            var coll = db.collection(collname);
+            // push it up
+            coll.insert(query, {} , function(err, result){
+                if(err && errcnt){
+                    return write(query, cb, errcnt-1);
+                }
+                else if (err){
+                    console.log("Write error!");
+                    cb(false);
+                }
+                else {
+                    cb(true);
+                }
+            });
+        }
     });
 };
 
@@ -181,26 +181,26 @@ module.exports.write = function write(query, cb, errcnt){
 module.exports.getUserFileName = function(htmlSource, experimentName, cb){
     var cleanHTMLS = util.cleanURL(htmlSource);
     MongoClient.connect(url, function(err, db){
-	var collname = util.createCollectionName(cleanHTMLS, experimentName);
-	var coll = db.collection(collname);
-	coll.aggregate([
-	    { $match: {experimentName: experimentName} },
-	    { $project: {userFileName: 1} },
-	    { $group: {
-		_id: null,
-		highest: {$max: "$userFileName"}
-	    }}
-	], function(err, result){
-	    if(err){
-		cb(0);
-	    }
-	    else if (result.length === 0){
-		cb(1);
-	    }
-	    else {
-		cb(result[0].highest+1);
-	    }
-	});
+        var collname = util.createCollectionName(cleanHTMLS, experimentName);
+        var coll = db.collection(collname);
+        coll.aggregate([
+            { $match: {experimentName: experimentName} },
+            { $project: {userFileName: 1} },
+            { $group: {
+                _id: null,
+                highest: {$max: "$userFileName"}
+            }}
+        ], function(err, result){
+            if(err){
+                cb(0);
+            }
+            else if (result.length === 0){
+                cb(1);
+            }
+            else {
+                cb(result[0].highest+1);
+            }
+        });
     });
 };
 
@@ -211,7 +211,7 @@ module.exports.getUserFileName = function(htmlSource, experimentName, cb){
  */
 module.exports.getDB = function(cb){
     MongoClient.connect(url, {}, function(err, db){
-	cb(err, db);
+        cb(err, db);
     });
 };
 
@@ -220,6 +220,6 @@ module.exports.getDB = function(cb){
  */
 module.exports.closeDB = function(){
     MongoClient.connect(url, {}, function(err, db){
-	db.close(db);
+        db.close(db);
     });
 }
