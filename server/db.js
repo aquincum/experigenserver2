@@ -15,6 +15,46 @@ var NOSUCHEXPERIMENT = module.exports.NOSUCHEXPERIMENT = "No such experiment!";
 
 
 /**
+ * Returns an array of destination file names. Returns default.csv for
+ * empty destination files. Also returns db.NOSUCHEXPERIMENT for no
+ * experiment.
+ * @param {string} sourceurl The source URL
+ * @param {string} experimentName The experiment name
+ * @param {Function} cb An (err, dests) style callback, where dests
+ * is an Array of Strings.
+ */
+module.exports.getDestinations = function(sourceurl, experimentName, cb){
+    var cleanURL = util.cleanURL(sourceurl),
+        collname = util.createCollectionName(cleanURL, experimentName);
+    MongoClient.connect(url, function(err, db){
+        var coll = db.collection(collname);
+        coll.aggregate([
+            { $match: {experimentName: experimentName}},
+            { $project: {destination: 1}},
+            { $group: {_id: "$destination", records: {$sum: 1}}}
+        ], function(err, dests){
+            var retval = [];
+            if(err){
+                cb(err);
+            }
+            else if (dests.length === 0){
+                cb(NOSUCHEXPERIMENT);
+            }
+            else {
+                dests.forEach(function(d){
+                    if (d._id === null){
+                        d._id = "default.csv";
+                    }
+                    retval.push(d._id);
+                });
+                cb(null,retval);
+            }
+        });
+    });
+};
+
+
+/**
  * Returns a map of usercode/number combination, as summarized from the
  * database. The return to the callback is an object array.
  * @param {string} sourceurl The source URL

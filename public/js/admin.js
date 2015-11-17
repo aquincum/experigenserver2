@@ -6,6 +6,14 @@
             respond("");
             req += "sourceurl=" + $("input[name=sourceURL]").val();
             req += "&experimentName=" + $("input[name=experimentName]").val();
+            var desttxt = $("input[name=destination]").val();
+            var destsel = $("select#destinationdropdown").val();
+            if (desttxt !== ""){
+                req += "&file=" + desttxt;
+            }
+            if (destsel !== null){
+                req += "&file=" + destsel;
+            }
             $.get(req)
                 .done(function(data){
                     if(data == "No such experiment!"){
@@ -45,6 +53,22 @@
                 a.target = "_blank";
                 a.click();
                 window.URL.revokeObjectURL(url);
+            });
+        });
+        $("input[name=findDestinations]").click(function(){
+            apiCall("destinations", function(data){
+                respond("Destination dropdown box populated", "success");
+                var dests = JSON.parse(data);
+                var $dropdown = $("#destinationdropdown");
+                $dropdown.show();
+                var inner = '';
+                $("input[name=destination]").hide();
+                $("input[name=destination]").val("");
+                $dropdown.addClass("dropdown");
+                dests.forEach(function(d){
+                    inner += '<option>' + d + '</option>';
+                });
+                $dropdown.append(inner);
             });
         });
     });

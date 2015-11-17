@@ -448,6 +448,46 @@ describe("users.csv", function(){
     });
 });
 
+describe("Get destinations", function(){
+    it("Should tell me if there's no such experiment", function(done){
+	var req = {
+	    query: {
+		sourceurl: tempsourceurl,
+		experimentName: tempexperimentname + "doesntexist"
+	    }
+	};
+	var res = {
+	    end: function(data){
+		assert.equal(data, "No such experiment!");
+		done();
+	    }
+	};
+	routing.routes["/destinations"](req, res);
+    });
+    it("Should give back the valid destination list", function(done){
+	var req = {
+	    query: {
+		sourceurl: tempsourceurl,
+		experimentName: tempexperimentname
+	    }
+	};
+	var res = {
+	    end: function(data){
+                var dests;
+                assert.doesNotThrow(function(){
+                    dests = JSON.parse(data);
+                });
+                assert.ok(dests.length);
+                assert.equal(dests.length, 2);
+                assert.equal(dests.indexOf("default.csv") > -1, true);
+                assert.equal(dests.indexOf("different.csv") > -1, true);
+                done();
+	    }
+	};
+	routing.routes["/destinations"](req, res);
+    });
+});
+
 
 describe("Removal", function(){	 
     it("Should be able to remove an experiment", function(done){
