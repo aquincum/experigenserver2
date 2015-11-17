@@ -5,7 +5,7 @@
   "main": ".#main.js",
   "scripts": {
     "start": "node main.js",
-      "jsdoc": "node ./node_modules/jsdoc/jsdoc.js -R README.md -d doc *.js server/*.js",
+    "jsdoc": "node ./node_modules/jsdoc/jsdoc.js -R README.md -d doc *.js server/*.js",
     "test": "./node_modules/mocha/bin/mocha"
   },
   "repository": {
