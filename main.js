@@ -21,9 +21,9 @@ var argv = require("yargs").usage("Usage: $0 [options]")
 
 var server = express();
 routing.route(server, argv.e);
-server.use(express.static("public"), {
+server.use(express.static("public", {
     extensions: ["html"]
-});
+}));
 
 
 server.listen(parseInt(argv.p, 10));
