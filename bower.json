@@ -1,0 +1,8 @@
+{
+    "name": "experigenserver2-client",
+    "version": "1.0.0",
+    "dependencies": {
+        "bootstrap": "latest",
+        "jquery": "latest"
+    }
+}

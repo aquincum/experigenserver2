@@ -1,9 +1,23 @@
+<!doctype html>
 <html>
   <head>
     <title>Experigen administration</title>
-
+    <link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.min.css">
+    <script src="lib/jquery/dist/jquery.min.js"></script>
+    <script src="js/admin.js"></script>
   </head>
 
   <body>
+    <input type="text" name="sourceURL" style="padding: 0px; width=20em;" size="80" maxlength="2"></input><br>
+    <input type="text" name="experimentName" style="padding: 0px; width=20em;" size="80" maxlength="2"></input>
+
+    <p>
+      <input type="button" name="checkExistence" value="Check existence"></input>
+      <input type="button" name="getData" value="Download data"></input>
+    </p>
+
+    <p>
+      <div id="status">
+    </p>
   </body>
 </html>
