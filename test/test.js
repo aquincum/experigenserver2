@@ -27,6 +27,32 @@ describe("Routing", function(){
 	    }
 	});
     });
+    it("Shouldn't serve .cgi if not emulating", function(done){
+	var mockServer = {
+	    get: function(path, func){
+		assert.notEqual(path.slice(path.length-4, path.length), ".cgi");
+	    }
+	};
+	routing.route(mockServer, false);
+	done();
+    });
+    it("Should serve .cgi if emulating", function(done){
+	var cgis = 0, notcgis = 0;
+	var mockServer = {
+	    get: function(path, func){
+		if(path.slice(path.length-4, path.length) == ".cgi"){
+		    cgis += 1;
+		}
+		else {
+		    notcgis += 1;
+		}
+	    }
+	};
+	routing.route(mockServer, true);
+	assert.equal(cgis > 0, true);
+	assert.equal(cgis, notcgis);
+	done();
+    });
 });
 
 describe("URL cleaning", function(){

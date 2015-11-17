@@ -166,9 +166,14 @@ module.exports.routes = routes;
 /**
  * Attaches the routing handlers to the server.
  * @param {Express~server} server The server to attach handlers to.
+ * @param {boolean} [emulate=false] Whether to emulate the 1.0 server by serving
+ * .cgi addresses as well.
  */
-module.exports.route = function doRouting(server) {
+module.exports.route = function doRouting(server, emulate) {
     for(var path in routes){
 	server.get(path, routes[path]);
+	if(emulate){
+	    server.get(path + ".cgi", routes[path]);
+	}
     }
 };
