@@ -1,19 +1,28 @@
 (function($){    
     $(function(){
 
-        function apiCall(request, callback){
-            var req = "/" + request + "?";
-            respond("");
-            req += "sourceurl=" + $("input[name=sourceURL]").val();
-            req += "&experimentName=" + $("input[name=experimentName]").val();
+        function getDestination(){
             var desttxt = $("input[name=destination]").val();
             var destsel = $("select#destinationdropdown").val();
             if (desttxt !== ""){
-                req += "&file=" + desttxt;
+                return desttxt;
             }
             if (destsel !== null){
-                req += "&file=" + destsel;
+                return destsel;
             }
+            return "";
+        }
+        
+        function apiCall(request, callback){
+            var req = "/" + request + "?",
+                dest = getDestination();
+            respond("");
+            req += "sourceurl=" + $("input[name=sourceURL]").val();
+            req += "&experimentName=" + $("input[name=experimentName]").val();
+            if(dest !== ""){
+                req += "&file=" + dest;
+            }
+
             $.get(req)
                 .done(function(data){
                     if(data == "No such experiment!"){
@@ -49,7 +58,7 @@
                 document.body.appendChild(a);
                 a.style = "display: none";
                 a.href = url;
-                a.download = "xp.csv";
+                a.download = getDestination() || "xp.csv";
                 a.target = "_blank";
                 a.click();
                 window.URL.revokeObjectURL(url);
