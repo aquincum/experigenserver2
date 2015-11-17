@@ -42,6 +42,7 @@
                 a.style = "display: none";
                 a.href = url;
                 a.download = "xp.csv";
+                a.target = "_blank";
                 a.click();
                 window.URL.revokeObjectURL(url);
             });
