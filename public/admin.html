@@ -1,5 +1,5 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
     <title>Experigen administration</title>
     <link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.min.css">
@@ -7,17 +7,37 @@
     <script src="js/admin.js"></script>
   </head>
 
-  <body>
-    <input type="text" name="sourceURL" style="padding: 0px; width=20em;" size="80"></input><br>
-    <input type="text" name="experimentName" style="padding: 0px; width=20em;" size="80"></input>
+  <body><div class="container">
+      
+      <div class="col-lg-6 col-lg-offset-3">
+        <div class="page-header">
+          <h1 class="text-center">Experigen <small>administration</small></h1>
+        </div>
+        
+        <form>
+          
+          <div class="form-group">
+            <label for="sourceURL">The source URL</label>
+            <input type="text" name="sourceURL" class="form-control" placeholder="URL"></input>
+          </div>
+          <div class="form-group">
+            <label for="experimentName">The experiment name</label>
+            <input type="text" name="experimentName" class="form-control" placeholder="experiment name"></input>
+          </div>
 
-    <p>
-      <input type="button" name="checkExistence" value="Check existence"></input>
-      <input type="button" name="getData" value="Download data"></input>
-    </p>
+          <div class="btn-group" role="group">
+              <input type="button" name="checkExistence" value="Check existence" class="btn btn-info"></input>
 
-    <p>
-      <div id="status">
-    </p>
+            <input type="button" name="getData" value="Download data" class="btn btn-primary"></input>
+          </div>
+
+        </form>
+
+        <div class="row">
+          <div id="status" class="col-lg-12 text-center alert alert-info" role="alert">Welcome!</div>
+        </div>
+
+      </div>
+    </div>
   </body>
 </html>

@@ -9,27 +9,32 @@
             $.get(req)
                 .done(function(data){
                     if(data == "No such experiment!"){
-                        respond(data);
+                        respond(data, "danger");
                     }
                     else {
                         callback(data);
                     }
                 })
                 .fail(function(){
-                    respond("API response error");
+                    respond("API response error", "danger");
                 });
         }
 
-        function respond(s){
+        function respond(s, alertstatus){
             $("#status").html(s);
+            $("#status").removeClass("alert-info alert-danger alert-warning alert-success");
+            if(alertstatus){
+                $("#status").addClass("alert-" + alertstatus);
+            }
         }
         $("input[name=checkExistence]").click(function(){
             apiCall("users", function(data){
-                respond(data.split("\n").length - 2);
+                respond("<strong>Experiment exists.</strong> There are " + (data.split("\n").length - 2) + " users in the database.", "success");
             });
         });
         $("input[name=getData]").click(function(){
             apiCall("makecsv", function(data){
+                respond("<strong>Success!</strong> Data download should start right away.", "success");
                 var blob = new Blob([data], {type: "octet/stream"}),
                     url = window.URL.createObjectURL(blob),
                     a = document.createElement("a");
