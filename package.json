@@ -1,51 +1,53 @@
 {
-  "name": "experigenserver2",
-  "version": "2.0.0",
-  "description": "Experigen server rethought using MongoDB",
-  "main": ".#main.js",
-  "scripts": {
-    "start": "node main.js",
-    "jsdoc": "node ./node_modules/jsdoc/jsdoc.js -R README.md -d doc *.js server/*.js",
-    "test": "./node_modules/mocha/bin/mocha"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+ssh://git@github.com/aquincum/experigenserver2.git"
-  },
-  "keywords": [
-    "experiment",
-    "server"
-  ],
-  "author": "Daniel Szeredi",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/aquincum/experigenserver2/issues"
-  },
-  "homepage": "https://github.com/aquincum/experigenserver2#readme",
-  "dependencies": {
-    "express": "*",
-    "yargs": "*",
-    "mongodb": ">=2.0",
-    "fnv-plus": "*",
-    "mocha": "*",
-    "codecov": ">1.0.0",
-    "istanbul": ">0.3.2"
-  },
-  "devDependencies": {
-    "blanket": "^1.1.9",
-    "coveralls": "^2.11.4",
-    "jsdoc": "^3.3.3",
-    "mocha-lcov-reporter": "^1.0.0"
-  },
-  "config": {
-    "blanket": {
-      "pattern": [
-        ""
-      ],
-      "data-cover-never": [
-        "node_modules",
-        "test"
-      ]
+    "name": "experigenserver2",
+    "version": "2.0.0",
+    "description": "Experigen server rethought using MongoDB",
+    "main": ".#main.js",
+    "scripts": {
+        "postinstall": "node_modules/bower/bin/bower install -F",
+        "start": "node main.js",
+        "jsdoc": "node ./node_modules/jsdoc/jsdoc.js -R README.md -d doc *.js server/*.js",
+        "test": "./node_modules/mocha/bin/mocha"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+ssh://git@github.com/aquincum/experigenserver2.git"
+    },
+    "keywords": [
+        "experiment",
+        "server"
+    ],
+    "author": "Daniel Szeredi",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/aquincum/experigenserver2/issues"
+    },
+    "homepage": "https://github.com/aquincum/experigenserver2#readme",
+    "dependencies": {
+        "express": "*",
+        "yargs": "*",
+        "mongodb": ">=2.0",
+        "fnv-plus": "*",
+        "mocha": "*",
+        "codecov": ">1.0.0",
+        "istanbul": ">0.3.2",
+        "bower": "*"
+    },
+    "devDependencies": {
+        "blanket": "^1.1.9",
+        "coveralls": "^2.11.4",
+        "jsdoc": "^3.3.3",
+        "mocha-lcov-reporter": "^1.0.0"
+    },
+    "config": {
+        "blanket": {
+            "pattern": [
+                ""
+            ],
+            "data-cover-never": [
+                "node_modules",
+                "test"
+            ]
+        }
     }
-  }
 }
