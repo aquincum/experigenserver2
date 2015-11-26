@@ -25,5 +25,7 @@ server.use(express.static("public", {
     extensions: ["html"]
 }));
 
-
-server.listen(parseInt(argv.p, 10));
+var port = argv.p;
+server.listen(parseInt(port, 10), function(err, res){
+    console.log("Listening on " + port + ".");
+});
