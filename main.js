@@ -3,7 +3,6 @@
 var express = require("express");
 var routing = require("./server/routing");
 var argv = require("yargs").usage("Usage: $0 [options]")
-    .default("p", 3000)
     .alias("p", "port")
     .nargs("p", 1)
     .describe("p", "Port number to run on")
@@ -25,7 +24,7 @@ server.use(express.static("public", {
     extensions: ["html"]
 }));
 
-var port = process.env.PORT || argv.p;
+var port = argv.p || process.env.PORT || 3000;
 server.listen(parseInt(port, 10), function(err, res){
     console.log("Listening on " + port + ".");
 });
