@@ -5,7 +5,7 @@ var routing = require("./server/routing");
 var argv = require("yargs").usage("Usage: $0 [options]")
     .alias("p", "port")
     .nargs("p", 1)
-    .describe("p", "Port number to run on")
+    .describe("p", "Port number to run on. By default, the PORT environment variable will be used, or if that is not set, the default is 3000.")
     .string("p")
     .boolean("e")
     .alias("e", "emulate")
