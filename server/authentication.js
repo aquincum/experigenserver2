@@ -31,14 +31,14 @@ var route = function(app){
             done(null, true);
         }
     ));
-//    passport.use(new AnonymousStrategy());
+    passport.use(new AnonymousStrategy());
     //app.use(passport.authenticate(["digest", "anonymous"]));
     app.use(passport.initialize());
     app.use(passport.session());
 
     
     app.get("/me",
-            passport.authenticate('digest', { session: false }),
+            passport.authenticate(['digest','anonymous'], { session: false }),
             function(req, res){
                 res.end(req.user || "none");
             });

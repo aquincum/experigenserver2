@@ -15,7 +15,8 @@ describe("Routing", function(){
 	var mockServer = {
 	    get: function(path, func){
 		assert.equal(typeof func, "function");
-	    }
+	    },
+            use: function(){}
 	};
 	routing.route(mockServer);
 	done();
@@ -32,7 +33,9 @@ describe("Routing", function(){
 	var mockServer = {
 	    get: function(path, func){
 		assert.notEqual(path.slice(path.length-4, path.length), ".cgi");
-	    }
+	    },
+            use: function(){}
+            
 	};
 	routing.route(mockServer, false);
 	done();
@@ -47,7 +50,9 @@ describe("Routing", function(){
 		else {
 		    notcgis += 1;
 		}
-	    }
+	    },
+            use: function(){}
+
 	};
 	routing.route(mockServer, true);
 	assert.equal(cgis > 0, true);
