@@ -6,6 +6,7 @@
 var db = require("./db");
 var util = require("./util");
 var fs = require("fs");
+var authentication = require("./authentication");
 
 /**
  * Posts the version of the server to the client.
@@ -202,4 +203,6 @@ module.exports.route = function doRouting(server, emulate) {
             server.get(path + ".cgi", routes[path]);
         }
     }
+    // Do authentication routing
+    authentication.route(server);
 };

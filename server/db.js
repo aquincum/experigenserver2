@@ -264,4 +264,12 @@ module.exports.closeDB = function(){
     MongoClient.connect(url, {}, function(err, db){
         db.close(db);
     });
-}
+};
+
+module.exports.findUser = function(username, cb){
+    MongoClient.connect(url, function(err, db){
+        if(err) cb(err);
+        var coll = db.collection("users");
+        coll.findOne({username: username}, cb);
+    });
+};

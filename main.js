@@ -1,6 +1,8 @@
 /*eslint-env node*/
 
 var express = require("express");
+var session = require("express-session");
+var logger = require("morgan");
 var routing = require("./server/routing");
 var argv = require("yargs").usage("Usage: $0 [options]")
     .alias("p", "port")
@@ -19,10 +21,12 @@ var argv = require("yargs").usage("Usage: $0 [options]")
 /* ----------------------------------------------- */
 
 var server = express();
-routing.route(server, argv.e);
+server.use(logger("dev"));
 server.use(express.static("public", {
     extensions: ["html"]
 }));
+server.use(session({secret: "keyboard cat"}));
+routing.route(server, argv.e);
 
 var port = argv.p || process.env.PORT || 3000;
 server.listen(parseInt(port, 10), function(err, res){
