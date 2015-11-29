@@ -266,6 +266,13 @@ module.exports.closeDB = function(){
     });
 };
 
+
+/**
+ * Finds an experimenter account in that database.
+ * @param {string} username The user name for the account
+ * @param {Function} cb Callbac function called with (err,
+ * user).
+ */
 module.exports.findUser = function(username, cb){
     MongoClient.connect(url, function(err, db){
         if(err) cb(err);

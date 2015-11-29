@@ -16,6 +16,13 @@ var passport = require("passport"),
 
 var db = require("./db");
 
+
+
+/**
+ * Called when starting up the server. It takes care of registering
+ * passport.js middleware, and set up routing for authentication.
+ * @param app The Express application 
+ */
 var route = function(app){
     passport.use(new DigestStrategy(
         {qop: "auth"},
