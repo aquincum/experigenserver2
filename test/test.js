@@ -3,39 +3,77 @@ var routing = require("../server/routing");
 var db = require("../server/db");
 var util = require("../server/util");
 var fs = require("fs");
+var request = require("supertest");
+var crypto = require("crypto");
 
 var NTOWRITE = 100;
 var tempsourceurl = "http://localhost/testing/now";
 var tempexperimentname = "000test000";
 var written = 0;
 // let's do this
-/* first */
+var server;
+
+
+// from passport-http
+function md5(str, encoding){
+  return crypto
+    .createHash('md5')
+    .update(str)
+    .digest(encoding || 'hex');
+}
+
+// from passport-http
+function nonce(len) {
+    var buf = [],
+        chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',
+        charlen = chars.length;
+
+  for (var i = 0; i < len; ++i) {
+    buf.push(chars[Math.random() * charlen | 0]);
+  }
+
+  return buf.join('');
+}
+
+before("Connecting to the server", function(){
+    server = require("../main");
+});
+
 describe("Routing", function(){
     it("Should route to functions to responses", function(done){
 	var mockServer = {
 	    get: function(path, func){
 		assert.equal(typeof func, "function");
 	    },
-            use: function(){}
+            use: function(){},
+            post: function(path, func){
+		assert.equal(typeof func, "function");
+	    },
+            delete: function(path, func){
+		assert.equal(typeof func, "function");
+	    },
+            put: function(path, func){
+		assert.equal(typeof func, "function");
+	    }
 	};
 	routing.route(mockServer);
 	done();
     });
     it("Should give me back the version string", function(done){
-	routing.routes["/version"]({}, {
-	    end: function(data){
-		assert.equal(data, require("../package.json").version);
-		done();
-	    }
-	});
+        request(server)
+            .get("/version")
+            .expect(200)
+            .expect(require("../package.json").version, done);
     });
     it("Shouldn't serve .cgi if not emulating", function(done){
 	var mockServer = {
 	    get: function(path, func){
 		assert.notEqual(path.slice(path.length-4, path.length), ".cgi");
 	    },
-            use: function(){}
-            
+            use: function(){},
+            post: function(){},
+            put: function(){},
+            delete: function(){},
 	};
 	routing.route(mockServer, false);
 	done();
@@ -51,13 +89,24 @@ describe("Routing", function(){
 		    notcgis += 1;
 		}
 	    },
-            use: function(){}
-
+            use: function(){},
+            post: function(){},
+            put: function(){},
+            delete: function(){},
 	};
 	routing.route(mockServer, true);
 	assert.equal(cgis > 0, true);
-	assert.equal(cgis, notcgis);
 	done();
+    });
+    it("Should serve the four original services", function(done){
+        var dones = 0,
+            addDone = 
+        ["/dbwrite", "/makecsv", "/users", "/getuserid"].map(function(service){
+            request(server).get(service).expect(200, function(){
+                dones ++;
+                if (dones == 4) done();
+            });
+        });
     });
 });
 
@@ -181,106 +230,76 @@ describe("Database", function(){
 
 describe("getuserid", function(){
     it("Should give back 0 if problems in request", function(done){
-	routing.routes["/getuserid"]({query: {}}, {
-	    end: function(data){
-		assert.equal(data, '("0")');
-		done();
-	    }
-	});
+        request(server)
+            .get("/getuserid")
+            .expect(200)
+            .expect('("0")', done);
     });
     it("Should give back 1 if new experiment", function(done){
-	routing.routes["/getuserid"](
-	{ query: {
-	    sourceurl: tempsourceurl,
-	    experimentName: tempexperimentname+"givback1"
-	}}, {
-	    end: function(data){
-		assert.equal(data, '("1")');
-		done();
-	    }
-	});
+        request(server)
+            .get("/getuserid?sourceurl=" + tempsourceurl +
+                 "&experimentName=" + tempexperimentname + "givback1")
+            .expect(200)
+            .expect('("1")', done);
     });
     it("Should give back 2 after 1 user", function(done){
-	routing.routes["/getuserid"](
-	{ query: {
-	    sourceurl: tempsourceurl,
-	    experimentName: tempexperimentname
-	}}, {
-	    end: function(data){
-		assert.equal(data, '("2")');
-		done();
-	    }
-	});
+        request(server)
+            .get("/getuserid?sourceurl=" + tempsourceurl +
+                 "&experimentName=" + tempexperimentname)
+            .expect(200)
+            .expect('("2")', done);
     });
 });
 
 describe("dbwrite", function(){
     it("Should fail if request is faulty", function(done){
-	var dones = 4;
+	var dones = 3;
 	function doneifdone(){
 	    dones -= 1;
 	    if(dones === 0) done();
 	}
-	routing.routes["/dbwrite"]({query: {}}, {
-	    end: function(data){
-		assert.equal(data, '("false")');
-		doneifdone();
-	    }
-	});
-	routing.routes["/dbwrite"]({query: {
-	    userFileName: 5,
-	    userCode: "JANI",
-	    sourceurl: "no.where"
-	}}, {
-	    end: function(data){
-		assert.equal(data, '("false")');
-		doneifdone();
-	    }
-	});
-	routing.routes["/dbwrite"]({query: {
-	    experimentName: "xxx"
-	}}, {
-	    end: function(data){
-		assert.equal(data, '("false")');
-		doneifdone();
-	    }
-	});
-	routing.routes["/dbwrite"]({}, {
-	    end: function(data){
-		assert.equal(data, '("false")');
-		doneifdone();
-	    }
-	});
+        request(server)
+            .get("/dbwrite")
+            .expect(200)
+            .expect('("false")', doneifdone);
+        request(server)
+            .get("/dbwrite?userCode=JANI&userFileName=5&sourceurl=no.where")
+            .expect(200)
+            .expect('("false")', doneifdone);
+        request(server)
+            .get("/dbwrite?experimentName=xxx")
+            .expect(200)
+            .expect('("false")', doneifdone);
     });
+    var now = (new Date()).getTime();
     it("Should otherwise write to the database", function(done){
-	var now = new Date();
-	var q = {
-	    query: {
-		sourceurl: tempsourceurl,
-		experimentName: tempexperimentname + "+",
-		userCode: "Tester",
-		userFileName: 1,
-		info: now.getTime()
-	    },
-	    ip: "127.0.0.1"	    
-	};
-	routing.routes["/dbwrite"](q, {
-	    end: function(data){
-		assert.equal(data, "(\"true\")");
-		db.getDB(function(err, _db){
-		    var collname = util.createCollectionName(q.query.sourceurl, q.query.experimentName);
-		    _db.collection(collname).findOne({info: now.getTime()}, function(err, doc){
-			assert.equal(err, null);
-			assert.equal(doc.userCode, "Tester");
-			assert.equal(doc.IP, "127.0.0.1");
-			_db.collection(collname).remove({info: now.getTime()}, function(err, result){
-			    assert.equal(err, null);
-			    assert.equal(result.result.n, 1);
-			    done();
-			});
+        request(server)
+            .get("/dbwrite?experimentName=" + tempexperimentname + "q&" +
+                 "sourceurl=" + tempsourceurl + "&" +
+                 "userCode=Tester&" +
+                 "userFileName=1&" +
+                 "info=" + now
+                )
+            .expect(200)
+            .expect('("true")', done);
+    });
+    it("Which should be there in the database", function(done){
+	db.getDB(function(err, _db){
+	    var collname = util.createCollectionName(util.cleanURL(tempsourceurl), tempexperimentname + "q");
+            _db.collection(collname).count({}, function(err, n){
+                assert.equal(err, null);
+                assert.equal(n, 1);
+	        _db.collection(collname).findOne({info: now.toString()}, function(err, doc){
+		    assert.equal(err, null);
+		    assert.equal(doc.userCode, "Tester");
+		    assert.equal(doc.IP, "::ffff:127.0.0.1");
+		    _db.collection(collname).remove({info: now.toString()}, function(err, result){
+		        assert.equal(err, null);
+		    assert.equal(result.result.n, 1);
+		        done();
 		    });
-		});
-	    }
+	        });
+            });
 	});
     });
 });
@@ -307,21 +326,12 @@ describe("Make CSV", function(){
 	assert.equal(str2, "\t5\t\t\n");
     });
     it("Should give me back a nice TSV", function(done){
-	var req = {
-	    query: {
-		sourceurl: tempsourceurl,
-		experimentName: tempexperimentname
-	    }
-	};
-	var buf = "";
-	var res = {
-	    write: function(data){
-		buf += data;
-	    },
-	    end: function(data){
-		if(data)
-		    buf += data;
-		var lines = buf.split("\n");
+        request(server)
+            .get('/makecsv?sourceurl=' + tempsourceurl +
+                 '&experimentName=' + tempexperimentname)
+            .expect(200)
+            .expect(function(res){
+		var lines = res.text.split("\n");
 		assert.equal(lines.length, NTOWRITE+2); // +header + last final \n
 		assert.equal(lines[0].indexOf("userCode") > -1, true);
 		assert.equal(lines[0].indexOf("userFileName") > -1, true);
@@ -337,43 +347,25 @@ describe("Make CSV", function(){
 			     tempexperimentname);
 		assert.equal(fields88[fieldnames.indexOf("response")],
 			     "good");
-		done();
-	    }
-	};
-	routing.routes["/makecsv"](req, res);
+	    })
+            .end(done);
     });
     it("Should tell me if there's no such experiment", function(done){
-	var req = {
-	    query: {
-		sourceurl: tempsourceurl,
-		experimentName: tempexperimentname + "doesntexist"
-	    }
-	};
-	var res = {
-	    end: function(data){
-		assert.equal(data, "No such experiment!");
-		done();
-	    }
-	};
-	routing.routes["/makecsv"](req, res);
+        request(server)
+            .get('/makecsv?sourceurl=' + tempsourceurl +
+                 '&experimentName=' + tempexperimentname + "doesntexist")
+            .expect(200)
+	    .expect("No such experiment!", done);
     });
     it("Should read other CSV's than the default", function(done){
-	var req = {
-	    query: {
-		sourceurl: tempsourceurl,
-		experimentName: tempexperimentname,
-		file: "different.csv"
-	    }
-	};
-	var buf = "";
-	var res = {
-	    write: function(data){
-		buf += data;
-	    },
-	    end: function(data){
-		if(data)
-		    buf += data;
-		var lines = buf.split("\n");
+        request(server)
+            .get('/makecsv?sourceurl=' + tempsourceurl +
+                 '&experimentName=' + tempexperimentname +
+                 '&file=different.csv')
+            .expect(200)
+        
+	    .expect(function(res){
+		var lines = res.text.split("\n");
 		assert.equal(lines.length, 3); // header + newline + line
 		var fns = lines[0].split("\t"),
 		    dataline = lines[1].split("\t");
@@ -382,30 +374,19 @@ describe("Make CSV", function(){
 		assert.equal(fns.indexOf("i"), -1);
 		assert.equal(dataline[fns.indexOf("destination")], "different.csv");
 		assert.equal(dataline[fns.indexOf("fieldOnlyHere")], "1");
-		done();
-	    }
-	};
-	routing.routes["/makecsv"](req, res);
-	
+	    })
+            .end(done);
     });
 });
 
 
 describe("users.csv", function(){
     it("Should tell me if there's no such experiment", function(done){
-	var req = {
-	    query: {
-		sourceurl: tempsourceurl,
-		experimentName: tempexperimentname + "doesntexist"
-	    }
-	};
-	var res = {
-	    end: function(data){
-		assert.equal(data, "No such experiment!");
-		done();
-	    }
-	};
-	routing.routes["/users"](req, res);
+        request(server)
+            .get("/users?sourceurl=" + tempsourceurl + "&" +
+                 "&experimentName=" + tempexperimentname + "doesntexist")
+            .expect(200)
+            .expect("No such experiment!", done);
     });
     it("Should give me back a valid record count", function(done){
 	var fizzbuzzexpected = Math.floor(NTOWRITE / 15) + 1,
@@ -414,82 +395,66 @@ describe("users.csv", function(){
 		sourceurl: tempsourceurl,
 		experimentName: tempexperimentname
 	    }},
-	    buf = "",
-	    res = {
-		write: function(data){
-		    buf += data;
-		},
-		end: function(data){
-		    if(data)
-			buf += data;
-		    var lines = buf.split("\n");
-		    assert.equal(lines.length, 5); // header+plain+fizzbuzz+weird+nl
-		    var fn = lines[0].split("\t");
-		    assert.equal(fn.length, 2);
-		    assert.equal(fn.indexOf("userCode") > -1, true);
-		    assert.equal(fn.indexOf("records") > -1, true);
-		    for(var i = 1; i < 4; i++){
-			var fields = lines[i].split("\t"),
-			    uc = fields[fn.indexOf("userCode")],
-			    rec = fields[fn.indexOf("records")];
-			switch (uc){
-			case "Tester":
-			    assert.equal(rec, plainexpected.toString());
-			    break;
-			case "TesterFizzBuzz":
-			    assert.equal(rec, fizzbuzzexpected.toString());
-			    break;
-			case "WeirdTester":
-			    assert.equal(rec, "1");
-			    break;
-			default:
-			    assert.equal(true, false);
-			}
+	    buf = "";
+
+        request(server)
+            .get("/users?sourceurl=" + tempsourceurl + "&" +
+                 "&experimentName=" + tempexperimentname)
+            .expect(200)
+            .expect(function(res){
+		var lines = res.text.split("\n");
+		assert.equal(lines.length, 5); // header+plain+fizzbuzz+weird+nl
+		var fn = lines[0].split("\t");
+		assert.equal(fn.length, 2);
+		assert.equal(fn.indexOf("userCode") > -1, true);
+		assert.equal(fn.indexOf("records") > -1, true);
+		for(var i = 1; i < 4; i++){
+		    var fields = lines[i].split("\t"),
+			uc = fields[fn.indexOf("userCode")],
+			rec = fields[fn.indexOf("records")];
+		    switch (uc){
+		    case "Tester":
+			assert.equal(rec, plainexpected.toString());
+			break;
+		    case "TesterFizzBuzz":
+			assert.equal(rec, fizzbuzzexpected.toString());
+			break;
+		    case "WeirdTester":
+			assert.equal(rec, "1");
+			break;
+		    default:
+			assert.equal(true, false);
 		    }
-		    done();
-		}		    
-	    };
-	routing.routes["/users"](req, res);
+		}
+	    })
+            .end(done);
     });
 });
 
 describe("Get destinations", function(){
     it("Should tell me if there's no such experiment", function(done){
-	var req = {
-	    query: {
-		sourceurl: tempsourceurl,
-		experimentName: tempexperimentname + "doesntexist"
-	    }
-	};
-	var res = {
-	    end: function(data){
-		assert.equal(data, "No such experiment!");
-		done();
-	    }
-	};
-	routing.routes["/destinations"](req, res);
+        request(server)
+            .get("/destinations?sourceurl=" + tempsourceurl + "&" +
+                 "&experimentName=" + tempexperimentname + "doesntexist")
+            .expect(200)
+            .expect("No such experiment!", done);
     });
     it("Should give back the valid destination list", function(done){
-	var req = {
-	    query: {
-		sourceurl: tempsourceurl,
-		experimentName: tempexperimentname
-	    }
-	};
-	var res = {
-	    end: function(data){
+        request(server)
+            .get("/destinations?sourceurl=" + tempsourceurl + "&" +
+                 "&experimentName=" + tempexperimentname)
+            .expect(200)
+            .expect(function(res){
                 var dests;
                 assert.doesNotThrow(function(){
-                    dests = JSON.parse(data);
+                    dests = JSON.parse(res.text);
                 });
                 assert.ok(dests.length);
                 assert.equal(dests.length, 2);
                 assert.equal(dests.indexOf("default.csv") > -1, true);
                 assert.equal(dests.indexOf("different.csv") > -1, true);
-                done();
-	    }
-	};
-	routing.routes["/destinations"](req, res);
+            })
+            .end(done);
     });
 });
 
@@ -533,27 +498,16 @@ describe.skip("Stresstest", function(){
 	});
     });
     it("Should be able to get the TSV", function(done){
-	var req = {
-	    query: {
-		sourceurl: tempsourceurl,
-		experimentName: tempexperimentname + ".stresstest"
-	    }
-	};
-	var buf = "";
-	var res = {
-	    write: function(data){
-		buf += data;
-	    },
-	    end: function(data){
-		if(data)
-		    buf += data;
-		var lines = buf.split("\n");
+        request(server)
+            .get('/makecsv?sourceurl=' + tempsourceurl +
+                 '&experimentName=' + tempexperimentname + '.stresstest')
+            .expect(200)
+	    .expect(function(res){
+		var lines = res.text.split("\n");
 		assert.equal(lines.length, STRESSN+2); // +header + last final \n
 		assert.equal(lines[0].indexOf("i") > -1, true);
-		done();
-	    }
-	};
-	routing.routes["/makecsv"](req, res);
+            })
+            .end(done);
     });
     it("Should be able to clean up", function(done){
 	db.removeExperiment(tempsourceurl, tempexperimentname + ".stresstest", function(err, res){
@@ -589,56 +543,60 @@ describe("Logging", function(){
 });
 
 
-describe.skip("Experimenter accounts", function(){
+describe("Experimenter accounts", function(){
     var username = "tester00001";
     var password1 = "password1";
     var password2 = "otherpassword";
     describe("insertion", function(){
-        var req = {
-            query: {username: username,
-                    password: password}
-        };
         it("Should insert new experimenters", function(done){
-            var dones = 0,
-                addDone = function(){
-                    dones ++;
-                    if(dones == 2) done();
-                },
-                res = {
-                    status: function(n){
-                        assert.equal(n, 200);
-                        addDone();
-                    },
-                    end: function(s){
-                        assert.equal(s, "done");
-                        addDone();
-                    }
-                };
-
+            request(server)
+                .post("/experimenter?experimenter=" + username + 
+                     "&password=" + password1)
+                .expect(200)
+                .expect("done", done);
         });
     });
-    describe("update", function(){
+   /* describe("update", function(){
     });
     describe("get", function(){
-    });
+    });*/
     describe("deletion", function(){
         it("Should delete the existing experimenter", function(done){
-            var dones = 0,
-                addDone = function(){
-                    dones ++;
-                    if(dones == 2) done();
-                },
-                res = {
-                    status: function(n){
-                        assert.equal(n, 200);
-                        addDone();
-                    },
-                    end: function(s){
-                        assert.equal(s, "done");
-                        addDone();
+            var newheader;
+            request(server)
+                .delete("/experimenter?experimenter=" + username)
+                .expect(401)
+                .expect(function(res){
+                    var method = "DELETE";
+                    var auths = res.headers["www-authenticate"].split(" ");
+                    assert.equal(auths[0], "Digest");
+                    auths = auths.splice(1).join("").split(",");
+                    var authresp = {};
+                    for(var i = 0; i < auths.length; i++){
+                        var m = auths[i].match(/(.*)="(.*)"/);
+                        authresp[m[1]] = m[2];
                     }
-                };
-            
+                    authresp.username = username;
+                    authresp.uri = "/experimenter?experimenter=" + username;
+                    authresp.cnonce = nonce(32);
+                    authresp.nc = "00000001";
+                    var ha1 = md5(authresp.username + ":" + authresp.realm + ":" + password1);
+                    var ha2 = md5(method + ":" + authresp.uri);
+                    authresp.response = md5(ha1 + ":" + authresp.nonce + ":" + authresp.nc + ":" + authresp.cnonce + ":" + authresp.qop + ":" + ha2);
+                    auths = [];
+                    for(var param in authresp){
+                        auths.push(param + "=" + authresp[param]);
+                    }
+                    newheader = "Digest " + auths.join(", ");
+                })
+                .end(function(){
+                    request(server)
+                        .delete("/experimenter?experimenter=" + username)
+                        .set("Authorization", newheader)
+                        .expect(200)
+                        .expect("done")
+                        .end(done);
+                });
         });
     });
 });
@@ -649,5 +607,6 @@ describe.skip("Experimenter accounts", function(){
 
 after("Cleaning up", function(){
     db.closeDB();
+    server.close();
 });
 

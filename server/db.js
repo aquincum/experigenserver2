@@ -339,7 +339,7 @@ module.exports.updateExperimenter = function(username, password, cb){
  * @param {Function} cb Callback function called with (err).
  * err is "not found" if entry is not found
  */
-module.exports.updateExperimenter = function(username, password, cb){
+module.exports.deleteExperimenter = function(username, cb){
     MongoClient.connect(url, function(err, db){
         if(err) return cb(err);
         var coll = db.collection("experimenters");

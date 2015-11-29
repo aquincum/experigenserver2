@@ -27,6 +27,7 @@ var route = function(app){
     passport.use(new DigestStrategy(
         {qop: "auth"},
         function(username, done){
+            console.log("UN " + username);
             db.findExperimenter(username, function(err, user){
                 if (err) { return done(err); }
                 if (!user) { return done(null, false); }
@@ -39,9 +40,19 @@ var route = function(app){
         }
     ));
     passport.use(new AnonymousStrategy());
-    app.use(passport.authenticate(["digest", "anonymous"]));
+
+
+    passport.serializeUser(function(user, done) {
+        done(null, user.username);
+    });
+
+    passport.deserializeUser(function(user, done) {
+        db.findExperimenter(user, done);
+    });
+
     app.use(passport.initialize());
     app.use(passport.session());
+    //app.use(passport.authenticate(["digest", "anonymous"]));
 
     
     app.get("/me",
@@ -63,6 +74,10 @@ var route = function(app){
         });
     });
     app.post("/experimenter", function(req, res){
+        if(!req.query.experimenter || !req.query.password){
+            res.status(400);
+            res.end("Wrong request!");
+        }
         db.insertExperimenter(req.query.experimenter, req.query.password, function(err){
             if(err){
                 if(err=="conflict"){
@@ -75,7 +90,7 @@ var route = function(app){
             }
         });
     });
-    app.put("/experimenter", function(req, res){
+    app.put("/experimenter", passport.authenticate("digest"), function(req, res){
         if(req.user.username !== req.experimenter){
             return res.status(403).end("not authorized");
         }
@@ -91,11 +106,11 @@ var route = function(app){
             }
         });
     });
-    app.delete("/experimenter", function(req, res){
-        if(req.user.username !== req.query.experimenter){
+    app.delete("/experimenter", passport.authenticate("digest"), function(req, res){
+        if(!req.user || (req.user.username !== req.query.experimenter)){
             return res.status(403).end("not authorized");
         }
-        db.deleteExperimenter(req.experimenter, function(err){
+        db.deleteExperimenter(req.query.experimenter, function(err){
             if(err){
                 if(err=="not found"){
                     res.status(404);

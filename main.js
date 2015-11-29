@@ -29,6 +29,6 @@ server.use(session({secret: "keyboard cat"}));
 routing.route(server, argv.e);
 
 var port = argv.p || process.env.PORT || 3000;
-server.listen(parseInt(port, 10), function(err, res){
+module.exports = server.listen(parseInt(port, 10), function(err, res){
     console.log("Listening on " + port + ".");
 });

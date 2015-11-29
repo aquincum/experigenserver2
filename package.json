@@ -42,7 +42,8 @@
     "blanket": "^1.1.9",
     "coveralls": "^2.11.4",
     "jsdoc": "^3.3.3",
-    "mocha-lcov-reporter": "^1.0.0"
+    "mocha-lcov-reporter": "^1.0.0",
+    "supertest": "^1.1.0"
   },
   "config": {
     "blanket": {
