@@ -588,7 +588,65 @@ describe("Logging", function(){
     });
 });
 
-	 
+
+describe.skip("Experimenter accounts", function(){
+    var username = "tester00001";
+    var password1 = "password1";
+    var password2 = "otherpassword";
+    describe("insertion", function(){
+        var req = {
+            query: {username: username,
+                    password: password}
+        };
+        it("Should insert new experimenters", function(done){
+            var dones = 0,
+                addDone = function(){
+                    dones ++;
+                    if(dones == 2) done();
+                },
+                res = {
+                    status: function(n){
+                        assert.equal(n, 200);
+                        addDone();
+                    },
+                    end: function(s){
+                        assert.equal(s, "done");
+                        addDone();
+                    }
+                };
+
+        });
+    });
+    describe("update", function(){
+    });
+    describe("get", function(){
+    });
+    describe("deletion", function(){
+        it("Should delete the existing experimenter", function(done){
+            var dones = 0,
+                addDone = function(){
+                    dones ++;
+                    if(dones == 2) done();
+                },
+                res = {
+                    status: function(n){
+                        assert.equal(n, 200);
+                        addDone();
+                    },
+                    end: function(s){
+                        assert.equal(s, "done");
+                        addDone();
+                    }
+                };
+            
+        });
+    });
+});
+
+
+
+
+
 after("Cleaning up", function(){
     db.closeDB();
 });

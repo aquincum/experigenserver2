@@ -270,13 +270,87 @@ module.exports.closeDB = function(){
 /**
  * Finds an experimenter account in that database.
  * @param {string} username The user name for the account
- * @param {Function} cb Callbac function called with (err,
+ * @param {Function} cb Callback function called with (err,
  * user).
  */
-module.exports.findUser = function(username, cb){
+module.exports.findExperimenter = function(username, cb){
     MongoClient.connect(url, function(err, db){
-        if(err) cb(err);
-        var coll = db.collection("users");
+        if(err) return cb(err);
+        var coll = db.collection("experimenters");
         coll.findOne({username: username}, cb);
+    });
+};
+
+/**
+ * Inserts an experimenter account in that database.
+ * @param {string} username The user name for the account
+ * @param {string} password The password for the account
+ * @param {Function} cb Callback function called with (err).
+ * err is "conflict" if entry already exists.
+ */
+module.exports.insertExperimenter = function(username, password, cb){
+    MongoClient.connect(url, function(err, db){
+        if(err) return cb(err);
+        var coll = db.collection("experimenters");
+        coll.count({username: username}, function(err, n){
+            if(err) return cb(err);
+            if(n > 0) return cb("conflict");
+            coll.insertOne({username: username,
+                            password: password,
+                            created: new Date()},
+                           function(err, res){
+                               if(err) return cb(err);
+                               else return cb();
+                           });
+        });
+    });
+};
+
+/**
+ * Updates an experimenter account in that database.
+ * @param {string} username The user name for the account
+ * @param {string} password The password for the account
+ * @param {Function} cb Callback function called with (err).
+ * err is "not found" if entry is not found
+ */
+module.exports.updateExperimenter = function(username, password, cb){
+    MongoClient.connect(url, function(err, db){
+        if(err) return cb(err);
+        var coll = db.collection("experimenters");
+        coll.count({username: username}, function(err, n){
+            if(err) return cb(err);
+            if(n === 0) return cb("not found");
+            coll.update({username: username},
+                        {username: username,
+                         password: password,
+                         created: new Date()},
+                        function(err, res){
+                            if(err) return cb(err);
+                            else return cb();
+                        });
+        });
+    });
+    
+};
+
+/**
+ * Deletes an experimenter account in that database.
+ * @param {string} username The user name for the account
+ * @param {Function} cb Callback function called with (err).
+ * err is "not found" if entry is not found
+ */
+module.exports.updateExperimenter = function(username, password, cb){
+    MongoClient.connect(url, function(err, db){
+        if(err) return cb(err);
+        var coll = db.collection("experimenters");
+        coll.count({username: username}, function(err, n){
+            if(err) return cb(err);
+            if(n === 0) return cb("not found");
+            coll.deleteOne({username: username},
+                        function(err, res){
+                            if(err) return cb(err);
+                            else return cb();
+                        });
+        });
     });
 };
