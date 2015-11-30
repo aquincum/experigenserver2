@@ -252,9 +252,7 @@ module.exports.getUserFileName = function(htmlSource, experimentName, cb){
  * @param {Function} cb A callback in the MongoDB (err,db) fashion.
  */
 module.exports.getDB = function(cb){
-    MongoClient.connect(url, {}, function(err, db){
-        cb(err, db);
-    });
+    MongoClient.connect(url, {}, cb);
 };
 
 /** Closes the database. I don't think it needs a callback,

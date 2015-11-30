@@ -27,7 +27,6 @@ var route = function(app){
     passport.use(new DigestStrategy(
         {qop: "auth"},
         function(username, done){
-            console.log("UN " + username);
             db.findExperimenter(username, function(err, user){
                 if (err) { return done(err); }
                 if (!user) { return done(null, false); }
@@ -67,7 +66,7 @@ var route = function(app){
             }
             else{
                 if(!doc){
-                    res.status(404).end("none");
+                    return res.status(404).end("none");
                 }
                 res.status(200).end(doc.username);
             }
@@ -76,7 +75,7 @@ var route = function(app){
     app.post("/experimenter", function(req, res){
         if(!req.query.experimenter || !req.query.password){
             res.status(400);
-            res.end("Wrong request!");
+            return res.end("Wrong request!");
         }
         db.insertExperimenter(req.query.experimenter, req.query.password, function(err){
             if(err){
@@ -91,7 +90,7 @@ var route = function(app){
         });
     });
     app.put("/experimenter", passport.authenticate("digest"), function(req, res){
-        if(req.user.username !== req.experimenter){
+        if(req.user.username !== req.query.experimenter){
             return res.status(403).end("not authorized");
         }
         db.updateExperimenter(req.query.experimenter, req.query.password, function(err){

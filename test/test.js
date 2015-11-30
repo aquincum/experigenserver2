@@ -35,6 +35,38 @@ function nonce(len) {
   return buf.join('');
 }
 
+
+var expectAuthDigest = function(uri, username, password, method, cb){
+    var newheader = "";
+    request(server)[method](uri).expect(401)
+        .expect(function(res){
+            var auths = res.headers["www-authenticate"].split(" ");
+            assert.equal(auths[0], "Digest");
+            auths = auths.splice(1).join("").split(",");
+            var authresp = {};
+            for(var i = 0; i < auths.length; i++){
+                var m = auths[i].match(/(.*)="(.*)"/);
+                authresp[m[1]] = m[2];
+            }
+            authresp.username = username;
+            authresp.uri = uri;
+            authresp.cnonce = nonce(32);
+            authresp.nc = "00000001";
+            var ha1 = md5(authresp.username + ":" + authresp.realm + ":" + password);
+            var ha2 = md5(method.toUpperCase() + ":" + authresp.uri);
+            authresp.response = md5(ha1 + ":" + authresp.nonce + ":" + authresp.nc + ":" + authresp.cnonce + ":" + authresp.qop + ":" + ha2);
+            auths = [];
+            for(var param in authresp){
+                auths.push(param + "=" + authresp[param]);
+            }
+            newheader = "Digest " + auths.join(", ");
+        })
+        .end(function(){
+            cb((request(server)[method](uri).set("Authorization", newheader)));
+        });
+    //  return new Test(this.app,
+};
+
 before("Connecting to the server", function(){
     server = require("../main");
 });
@@ -555,48 +587,113 @@ describe("Experimenter accounts", function(){
                 .expect(200)
                 .expect("done", done);
         });
+        it("Should not insert duplicates", function(done){
+            request(server)
+                .post("/experimenter?experimenter=" + username + 
+                     "&password=" + password1)
+                .expect(409)
+                .expect("conflict", done);
+        });
+        it("Should not insert with no password", function(done){
+            request(server)
+                .post("/experimenter?experimenter=" + username + "X")
+                .expect(400)
+                .expect("Wrong request!", done);
+        });
     });
-   /* describe("update", function(){
+    describe("update", function(){
+        it("Should be able to update the current existing experimenter", function(done){
+            expectAuthDigest("/experimenter?experimenter=" + username + "&password=" + password2,
+                             username,
+                             password1,
+                             "put",
+                             function(r){
+                                 r.expect(200).expect("done", done);
+                             });
+        });
+        it("Should not update with no login", function(done){
+            request(server)
+                .put("/experimenter?experimenter=" + username + 
+                     "&password=" + password1)
+                .expect(401, done);
+        });
+        it("Should not update with wrong experimenter login", function(done){
+            request(server)
+                .post("/experimenter?experimenter=" + username + "x" + 
+                     "&password=" + password1)
+                .expect(200)
+                .expect("done")
+                .end(function(){
+                    expectAuthDigest("/experimenter?experimenter=" + username + "&password=" + password1,
+                                     username + "x",
+                                     password1,
+                                     "put",
+                                     function(r){
+                                         r.expect(403).expect("not authorized", done);
+                                     });
+                });
+        });
+        it("Should not update with wrong password", function(done){
+            expectAuthDigest("/experimenter?experimenter=" + username + "&password=" + password1,
+                             username,
+                             password1 + "sure to be false",
+                             "put",
+                             function(r){
+                                 r.expect(401, done);
+                             });
+        });
     });
     describe("get", function(){
-    });*/
-    describe("deletion", function(){
-        it("Should delete the existing experimenter", function(done){
-            var newheader;
+        it("Should be able to retrieve an experimenter", function(done){
             request(server)
-                .delete("/experimenter?experimenter=" + username)
-                .expect(401)
-                .expect(function(res){
-                    var method = "DELETE";
-                    var auths = res.headers["www-authenticate"].split(" ");
-                    assert.equal(auths[0], "Digest");
-                    auths = auths.splice(1).join("").split(",");
-                    var authresp = {};
-                    for(var i = 0; i < auths.length; i++){
-                        var m = auths[i].match(/(.*)="(.*)"/);
-                        authresp[m[1]] = m[2];
-                    }
-                    authresp.username = username;
-                    authresp.uri = "/experimenter?experimenter=" + username;
-                    authresp.cnonce = nonce(32);
-                    authresp.nc = "00000001";
-                    var ha1 = md5(authresp.username + ":" + authresp.realm + ":" + password1);
-                    var ha2 = md5(method + ":" + authresp.uri);
-                    authresp.response = md5(ha1 + ":" + authresp.nonce + ":" + authresp.nc + ":" + authresp.cnonce + ":" + authresp.qop + ":" + ha2);
-                    auths = [];
-                    for(var param in authresp){
-                        auths.push(param + "=" + authresp[param]);
-                    }
-                    newheader = "Digest " + auths.join(", ");
-                })
-                .end(function(){
-                    request(server)
-                        .delete("/experimenter?experimenter=" + username)
-                        .set("Authorization", newheader)
-                        .expect(200)
-                        .expect("done")
-                        .end(done);
+                .get("/experimenter?experimenter=" + username)
+                .expect(200)
+                .expect(username, done);
+        });
+        it("Should be able to respond to non existing experimenter request", function(done){
+            request(server)
+                .get("/experimenter?experimenter=" + username + "Y")
+                .expect(404)
+                .expect("none", done);
+        });
+    });
+    describe("deletion", function(){
+        it("Should not delete with wrong authentication", function(done){
+            expectAuthDigest("/experimenter?experimenter=" + username,
+                             username + "x",
+                             password1,
+                             "delete",
+                             function(r){
+                                 r.expect(403).expect("not authorized", done);
+                             });
+        });
+        it("Should delete the existing experimenter", function(done){
+            expectAuthDigest("/experimenter?experimenter=" + username,
+                             username,
+                             password2,
+                             "delete",
+                             function(r){
+                                 r.expect(200).expect("done", done);
+                             });
+        });
+        it("Should delete the other existing experimenter", function(done){
+            expectAuthDigest("/experimenter?experimenter=" + username + "x",
+                             username + "x",
+                             password1,
+                             "delete",
+                             function(r){
+                                 r.expect(200).expect("done", done);
+                             });
+        });
+        it("Finally, experimenter db should be empty", function(done){
+            db.getDB(function(err, db){
+                assert.equal(err, null);
+                db.collection("experimenters").count(function(err, n){
+                    assert.equal(err, null);
+                    assert.equal(n, 0);
+                    done();
                 });
+            });
         });
     });
 });
