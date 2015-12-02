@@ -21,11 +21,14 @@ var db = require("./db");
 /**
  * Called when starting up the server. It takes care of registering
  * passport.js middleware, and set up routing for authentication.
- * @param app The Express application 
+ * Note: the password stored is an object with an "ha1" key, which
+ * is passed to passport-http. It knows what to do with it.
+ * @param {Server} app The Express application 
  */
 var route = function(app){
     passport.use(new DigestStrategy(
-        {qop: "auth"},
+        {qop: "auth",
+         realm: "Experimenters"},
         function(username, done){
             db.findExperimenter(username, function(err, user){
                 if (err) { return done(err); }
@@ -73,11 +76,11 @@ var route = function(app){
         });
     });
     app.post("/experimenter", function(req, res){
-        if(!req.query.experimenter || !req.query.password){
+        if(!req.query.experimenter || !req.query.ha1){
             res.status(400);
             return res.end("Wrong request!");
         }
-        db.insertExperimenter(req.query.experimenter, req.query.password, function(err){
+        db.insertExperimenter(req.query.experimenter, req.query.ha1, function(err){
             if(err){
                 if(err=="conflict"){
                     res.status(409);
@@ -93,7 +96,7 @@ var route = function(app){
         if(req.user.username !== req.query.experimenter){
             return res.status(403).end("not authorized");
         }
-        db.updateExperimenter(req.query.experimenter, req.query.password, function(err){
+        db.updateExperimenter(req.query.experimenter, req.query.ha1, function(err){
             if(err){
                 if(err=="not found"){
                     res.status(404);

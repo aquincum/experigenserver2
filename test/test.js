@@ -48,6 +48,7 @@ var expectAuthDigest = function(uri, username, password, method, cb){
                 var m = auths[i].match(/(.*)="(.*)"/);
                 authresp[m[1]] = m[2];
             }
+            assert.equal(authresp.realm, "Experimenters");
             authresp.username = username;
             authresp.uri = uri;
             authresp.cnonce = nonce(32);
@@ -575,22 +576,28 @@ describe("Logging", function(){
 });
 
 
+var HA1 = function(username, password){
+    return md5(username + ":Experimenters:" + password);
+};
+
 describe("Experimenter accounts", function(){
-    var username = "tester00001";
-    var password1 = "password1";
-    var password2 = "otherpassword";
+    var username = "tester00001",
+        password1 = "password1",
+        password2 = "otherpassword",
+        ha11 = HA1(username, password1),
+        ha12 = HA1(username, password2);
     describe("insertion", function(){
         it("Should insert new experimenters", function(done){
             request(server)
                 .post("/experimenter?experimenter=" + username + 
-                     "&password=" + password1)
+                     "&ha1=" + ha11)
                 .expect(200)
                 .expect("done", done);
         });
         it("Should not insert duplicates", function(done){
             request(server)
                 .post("/experimenter?experimenter=" + username + 
-                     "&password=" + password1)
+                     "&ha1=" + ha11)
                 .expect(409)
                 .expect("conflict", done);
         });
@@ -603,7 +610,7 @@ describe("Experimenter accounts", function(){
     });
     describe("update", function(){
         it("Should be able to update the current existing experimenter", function(done){
-            expectAuthDigest("/experimenter?experimenter=" + username + "&password=" + password2,
+            expectAuthDigest("/experimenter?experimenter=" + username + "&ha1=" + ha12,
                              username,
                              password1,
                              "put",
@@ -614,17 +621,17 @@ describe("Experimenter accounts", function(){
         it("Should not update with no login", function(done){
             request(server)
                 .put("/experimenter?experimenter=" + username + 
-                     "&password=" + password1)
+                     "&ha1=" + ha11)
                 .expect(401, done);
         });
         it("Should not update with wrong experimenter login", function(done){
             request(server)
                 .post("/experimenter?experimenter=" + username + "x" + 
-                     "&password=" + password1)
+                      "&ha1=" + HA1(username + "x", password1))
                 .expect(200)
                 .expect("done")
                 .end(function(){
-                    expectAuthDigest("/experimenter?experimenter=" + username + "&password=" + password1,
+                    expectAuthDigest("/experimenter?experimenter=" + username + "&ha1=" + ha11,
                                      username + "x",
                                      password1,
                                      "put",
@@ -634,7 +641,7 @@ describe("Experimenter accounts", function(){
                 });
         });
         it("Should not update with wrong password", function(done){
-            expectAuthDigest("/experimenter?experimenter=" + username + "&password=" + password1,
+            expectAuthDigest("/experimenter?experimenter=" + username + "&ha1=" + ha11,
                              username,
                              password1 + "sure to be false",
                              "put",
