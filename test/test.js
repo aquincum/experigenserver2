@@ -4,7 +4,6 @@ var db = require("../server/db");
 var util = require("../server/util");
 var fs = require("fs");
 var request = require("supertest");
-var crypto = require("crypto");
 
 var NTOWRITE = 100;
 var tempsourceurl = "http://localhost/testing/now";
@@ -12,61 +11,11 @@ var tempexperimentname = "000test000";
 var written = 0;
 // let's do this
 var server;
-
-
-// from passport-http
-function md5(str, encoding){
-  return crypto
-    .createHash('md5')
-    .update(str)
-    .digest(encoding || 'hex');
-}
+var testutils = require("./testutils");
+var HA1 = testutils.HA1;
+var expectAuthDigest = testutils.expectAuthDigest;
 
 // from passport-http
-function nonce(len) {
-    var buf = [],
-        chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',
-        charlen = chars.length;
-
-  for (var i = 0; i < len; ++i) {
-    buf.push(chars[Math.random() * charlen | 0]);
-  }
-
-  return buf.join('');
-}
-
-
-var expectAuthDigest = function(uri, username, password, method, cb){
-    var newheader = "";
-    request(server)[method](uri).expect(401)
-        .expect(function(res){
-            var auths = res.headers["www-authenticate"].split(" ");
-            assert.equal(auths[0], "Digest");
-            auths = auths.splice(1).join("").split(",");
-            var authresp = {};
-            for(var i = 0; i < auths.length; i++){
-                var m = auths[i].match(/(.*)="(.*)"/);
-                authresp[m[1]] = m[2];
-            }
-            assert.equal(authresp.realm, "Experimenters");
-            authresp.username = username;
-            authresp.uri = uri;
-            authresp.cnonce = nonce(32);
-            authresp.nc = "00000001";
-            var ha1 = md5(authresp.username + ":" + authresp.realm + ":" + password);
-            var ha2 = md5(method.toUpperCase() + ":" + authresp.uri);
-            authresp.response = md5(ha1 + ":" + authresp.nonce + ":" + authresp.nc + ":" + authresp.cnonce + ":" + authresp.qop + ":" + ha2);
-            auths = [];
-            for(var param in authresp){
-                auths.push(param + "=" + authresp[param]);
-            }
-            newheader = "Digest " + auths.join(", ");
-        })
-        .end(function(){
-            cb((request(server)[method](uri).set("Authorization", newheader)));
-        });
-    //  return new Test(this.app,
-};
 
 before("Connecting to the server", function(){
     server = require("../main");
@@ -576,9 +525,6 @@ describe("Logging", function(){
 });
 
 
-var HA1 = function(username, password){
-    return md5(username + ":Experimenters:" + password);
-};
 
 describe("Experimenter accounts", function(){
     var username = "tester00001",
@@ -614,6 +560,7 @@ describe("Experimenter accounts", function(){
                              username,
                              password1,
                              "get",
+                             server,
                              function(r){
                                  r.expect(200).expect(username, done);
                              });
@@ -623,6 +570,7 @@ describe("Experimenter accounts", function(){
                              username,
                              password2,
                              "get",
+                             server,
                              function(r){
                                  r.expect(401, done);
                              });
@@ -634,6 +582,7 @@ describe("Experimenter accounts", function(){
                              username,
                              password1,
                              "put",
+                             server,
                              function(r){
                                  r.expect(200).expect("done", done);
                              });
@@ -655,6 +604,7 @@ describe("Experimenter accounts", function(){
                                      username + "x",
                                      password1,
                                      "put",
+                                     server,
                                      function(r){
                                          r.expect(403).expect("not authorized", done);
                                      });
@@ -665,6 +615,7 @@ describe("Experimenter accounts", function(){
                              username,
                              password1 + "sure to be false",
                              "put",
+                             server,
                              function(r){
                                  r.expect(401, done);
                              });
@@ -690,6 +641,7 @@ describe("Experimenter accounts", function(){
                              username + "x",
                              password1,
                              "delete",
+                             server,
                              function(r){
                                  r.expect(403).expect("not authorized", done);
                              });
@@ -699,6 +651,7 @@ describe("Experimenter accounts", function(){
                              username,
                              password2,
                              "delete",
+                             server,
                              function(r){
                                  r.expect(200).expect("done", done);
                              });
@@ -708,6 +661,7 @@ describe("Experimenter accounts", function(){
                              username + "x",
                              password1,
                              "delete",
+                             server,
                              function(r){
                                  r.expect(200).expect("done", done);
                              });

@@ -91,6 +91,7 @@ app.controller("experimenterCtrl", function($scope){
     $scope.experimenter = "";
     $scope.password = "";
     $scope.ha1 = "";
+    $scope.loggedIn = false;
     $scope.updateHA1 = function(){
         $scope.ha1 = CryptoJS.MD5($scope.experimenter + ":Experimenters" + $scope.password).toString();
     };
@@ -115,5 +116,14 @@ app.controller("experimenterCtrl", function($scope){
         });
     };
     $scope.login = function(){
+        $.ajaxDigest("/me", {
+            username: $scope.experimenter,
+            password: $scope.password
+        }).done(function(){
+            $scope.loggedIn = true;
+            respond("Logged in! Welcome " + $scope.username, "success");
+        }).fail(function(){
+            respond("Login failure!", "danger");
+        });
     };
 });
