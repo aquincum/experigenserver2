@@ -93,7 +93,7 @@ app.controller("experimenterCtrl", function($scope){
     $scope.ha1 = "";
     $scope.loggedIn = false;
     $scope.updateHA1 = function(){
-        $scope.ha1 = CryptoJS.MD5($scope.experimenter + ":Experimenters" + $scope.password).toString();
+        $scope.ha1 = CryptoJS.MD5($scope.experimenter + ":Experimenters:" + $scope.password).toString();
     };
     $scope.$watch("experimenter", $scope.updateHA1);
     $scope.$watch("password", $scope.updateHA1);

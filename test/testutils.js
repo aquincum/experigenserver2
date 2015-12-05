@@ -10,7 +10,7 @@ var md5 = function md5(str, encoding){
 };
 
 // from passport-http
-var nonce = function md5(len) {
+var nonce = function nonce(len) {
     var buf = [],
         chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',
         charlen = chars.length;
