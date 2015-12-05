@@ -608,6 +608,26 @@ describe("Experimenter accounts", function(){
                 .expect("Wrong request!", done);
         });
     });
+    describe("ME", function(){
+        it("Should be able to verify login with /me", function(done){
+            expectAuthDigest("/me",
+                             username,
+                             password1,
+                             "get",
+                             function(r){
+                                 r.expect(200).expect(username, done);
+                             });
+        });
+        it("Should reject bad login with /me", function(done){
+            expectAuthDigest("/me",
+                             username,
+                             password2,
+                             "get",
+                             function(r){
+                                 r.expect(401, done);
+                             });
+        });
+    });
     describe("update", function(){
         it("Should be able to update the current existing experimenter", function(done){
             expectAuthDigest("/experimenter?experimenter=" + username + "&ha1=" + ha12,

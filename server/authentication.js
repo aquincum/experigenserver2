@@ -57,9 +57,14 @@ var route = function(app){
     //app.use(passport.authenticate(["digest", "anonymous"]));
 
     
-    app.get("/me",
-            function(req, res){
-                res.end(req.user || "none");
+    app.get("/me", passport.authenticate(["digest"]),
+            function(req,res){
+                if(req.user){
+                    res.end(req.user.username);
+                }
+                else{
+                    res.end("none");
+                }
             });
 
     app.get("/experimenter", function(req, res){

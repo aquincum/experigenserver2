@@ -114,4 +114,6 @@ app.controller("experimenterCtrl", function($scope){
             }
         });
     };
+    $scope.login = function(){
+    };
 });
