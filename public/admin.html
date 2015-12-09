@@ -4,6 +4,7 @@
     <title>Experigen administration</title>
     <link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.min.css">
     <script src="lib/jquery/dist/jquery.min.js"></script>
+    <script src="lib/bootstrap/js/dropdown.js"></script>
     <script src="lib/angular/angular.js"></script>
     <script src="lib/digest-ajax/index.js"></script>
     <script src="js/admin.js"></script>
@@ -52,15 +53,29 @@
       </div>
       <div class="col-lg-3">
         <div class="page-header">
-          <div ng-app="adminApp">
-            <form ng-controller="experimenterCtrl">
-              <label for="experimenter">Experimenter account</label>
-              <input type="text" name="experimenter" class="form-control" placeholder="experimenter account name" ng-model="experimenter"></input>
-              <label for="destination">Password</label>
-              <input type="password" name="password" class="form-control" ng-model="password"></input>
-              <input type="button" name="login" value="Log in" class="btn" ng-click="login()"></input>
-              <input type="button" name="register" value="Register" class="btn" ng-click="register()"></input>
-            </form>
+          <div ng-app="adminApp" ng-controller="experimenterCtrl">
+
+            <div class="dropdown">
+              <button id="loginDDLabel" data-target="#" data-toggle="dropdown" class="btn btn-default dropdown-toggle" aria-haspopup="true" aria-expanded="false">
+                {{ toplabel }}
+                <span class="caret"></span>
+              </button>
+              <ul class="dropdown-menu col-lg-12" aria-labelledby="loginDDLabel">
+                <li>
+                  <form ng-hide="loggedIn">
+                    <label for="experimenter">Experimenter account</label>
+                    <input type="text" name="experimenter" class="form-control" placeholder="experimenter account name" ng-model="experimenter"></input>
+                    <label for="destination">Password</label>
+                    <input type="password" name="password" class="form-control" ng-model="password"></input>
+                    <input type="button" name="login" value="Log in" class="btn" ng-click="login()"></input>
+                    <input type="button" name="register" value="Register" class="btn" ng-click="register()"></input>
+                  </form>
+                </li>
+                <li ng-show="loggedIn">
+                  <input type="button" name="logout" value="Log out" class="btn" ng-click="logout()"></input>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>

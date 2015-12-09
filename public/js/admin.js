@@ -88,10 +88,22 @@ $("input[name=checkExistence]").click(function(){
 
 var app = angular.module("adminApp", []);
 app.controller("experimenterCtrl", function($scope){
+    var updateLogin = function(li){
+        $scope.$applyAsync(function(){
+            $scope.loggedIn = li;
+        });
+        if(li){
+            $scope.toplabel = $scope.experimenter;
+        }
+        else{
+            $scope.toplabel = "Not logged in";
+        }
+    };
     $scope.experimenter = "";
+    //    $scope.toplabel = ;
     $scope.password = "";
     $scope.ha1 = "";
-    $scope.loggedIn = false;
+    updateLogin(false);
     $scope.updateHA1 = function(){
         $scope.ha1 = CryptoJS.MD5($scope.experimenter + ":Experimenters:" + $scope.password).toString();
     };
@@ -102,6 +114,7 @@ app.controller("experimenterCtrl", function($scope){
             "&ha1="+$scope.ha1;
         $.post(req).success(function(data){
             respond($scope.experimenter + " registered!", "success");
+            updateLogin(true);
         }).fail(function(data){
             switch(data.status){
             case 400:
@@ -120,10 +133,15 @@ app.controller("experimenterCtrl", function($scope){
             username: $scope.experimenter,
             password: $scope.password
         }).done(function(){
-            $scope.loggedIn = true;
-            respond("Logged in! Welcome " + $scope.username, "success");
+            updateLogin(true);
+            respond("Logged in! Welcome " + $scope.experimenter, "success");
         }).fail(function(){
             respond("Login failure!", "danger");
         });
     };
+    $scope.logout = function(){
+        $scope.username = "";
+        $scope.password = "";
+        updateLogin(false);
+    }
 });
