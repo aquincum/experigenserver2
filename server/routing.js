@@ -13,6 +13,7 @@ var dbWrite = require("./controllers/dbWrite");
 var resultsCtrl = require("./controllers/results");
 var getDestinations = require("./controllers/getDestinations");
 var authCtrl = require("./controllers/authenticationController");
+var regCtrl = require("./controllers/registrationController");
 
 var routes = {
     noAuth: {
@@ -33,11 +34,15 @@ var routes = {
         get: {
             "/me": authCtrl.me
         },
+        post: {
+            "/registration": regCtrl.postRegistration
+        },
         put: {
             "/experimenter": authCtrl.putExperimenter
         },
         delete: {
-            "/experimenter": authCtrl.deleteExperimenter
+            "/experimenter": authCtrl.deleteExperimenter,
+            "/registration": regCtrl.deleteRegistration
         }
     }
 };
@@ -60,6 +65,7 @@ module.exports.routes = routes;
  * .cgi addresses as well.
  */
 module.exports.route = function doRouting(server, emulate) {
+    /** noop to run if no authentication needed */
     function noop (res, req, next) {next();}
     authentication.setup(server);
     for(var authenticated in routes){
@@ -72,6 +78,7 @@ module.exports.route = function doRouting(server, emulate) {
                         noop,
                     routes[authenticated][method][path]
                 );
+                console.log(path,method, "routed");
                 if(emulate && authenticated == "noAuth"){
                     server[method](path + ".cgi", routes[authenticated][method][path]);
                 }

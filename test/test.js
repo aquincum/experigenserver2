@@ -529,14 +529,14 @@ describe("Logging", function(){
     });
 });
 
+var username = "tester00001",
+    password1 = "password1",
+    password2 = "otherpassword",
+    ha11 = HA1(username, password1),
+    ha12 = HA1(username, password2);
 
 
 describe("Experimenter accounts", function(){
-    var username = "tester00001",
-        password1 = "password1",
-        password2 = "otherpassword",
-        ha11 = HA1(username, password1),
-        ha12 = HA1(username, password2);
     describe("insertion", function(){
         it("Should insert new experimenters", function(done){
             request(server)
@@ -640,7 +640,60 @@ describe("Experimenter accounts", function(){
                 .expect("none", done);
         });
     });
-    describe("deletion", function(){
+    describe("Registration", function(){
+        var insideurl = (new Experiment(tempsourceurl,"")).cleanURL();
+        it("Should register a new experiment", function(done){
+            expectAuthDigest("/registration?experimenter=" + username + 
+                             "&sourceurl=" + encodeURIComponent(tempsourceurl) +
+                             "&experimentName=" + tempexperimentname,
+                             username,
+                             password2,
+                             "post",
+                             server,
+                             function(r){
+                                 r.expect(200, done);
+                             });
+                            
+        });
+        it("Should be there", function(done){
+            db.getDB(function(err, _db){
+                _db.collection("registration").count({}, function(err, n){
+                    assert.equal(err, null);
+                    assert.equal(n, 1);
+                    _db.collection("registration").findOne({experimenter: username}, function(err, doc){
+                        console.log("DOC: ", doc);
+                        assert.equal(doc.experimenter, username);
+                        assert.equal(doc.experiment.sourceUrl, insideurl);
+                        assert.equal(doc.experiment.experimentName, tempexperimentname);
+                        done();
+                    });
+                });
+            });
+        });
+        it.skip("Should reject a bad request");
+        it.skip("Should forbid registering an already existing experiment");
+        it("Should remove registration", function(done){
+            expectAuthDigest("/registration?experimenter=" + username +
+                             "&sourceurl=" + encodeURIComponent(tempsourceurl) +
+                             "&experimentName=" + tempexperimentname,
+                             username,
+                             password2,
+                             "delete",
+                             server,
+                             function(r){
+                                 r.expect(200, done);
+                             });
+        });
+        it("Should be cleaned up", function(done){
+            db.getDB(function(err, _db){
+                _db.collection("registration").remove({}, function(err, n){
+                    assert.equal(err, null);
+                    done();
+                });
+            });
+        });
+    });
+    describe("Experimenter deletion", function(){
         it("Should not delete with wrong authentication", function(done){
             expectAuthDigest("/experimenter?experimenter=" + username,
                              username + "x",
@@ -683,8 +736,6 @@ describe("Experimenter accounts", function(){
         });
     });
 });
-
-
 
 
 

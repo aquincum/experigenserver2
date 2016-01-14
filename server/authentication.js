@@ -22,7 +22,6 @@ var experimenterModel = require("./models/experimenter");
 var authenticate = passport.authenticate.bind(passport, ["digest"]);
 
 
-
 /**
  * Called when starting up the server. It takes care of registering
  * passport.js middleware, and set up routing for authentication.
@@ -31,6 +30,24 @@ var authenticate = passport.authenticate.bind(passport, ["digest"]);
  * @param {Server} app The Express application 
  */
 var setup = function(app){
+    /*app.use(function(req, res, next){
+        if(req.headers && req.headers.authorization && req.headers.authorization.search(/sourceurl/)){
+            var ats = req.headers.authorization.split("&");
+            var newats = ats.map(function(s){
+                var eqs = s.split("=");
+                if(eqs[0] == "sourceurl"){
+                    eqs[1] = encodeURIComponent(eqs[1]);
+                    return eqs.join("=");
+                }
+                else {
+                    return s;
+                }
+            });
+            req.headers.authorization = newats.join("&");
+            console.log("IM HERE",req.headers.authorization);
+        }
+        next();
+    });*/
     passport.use(new DigestStrategy(
         {qop: "auth",
          realm: "Experimenters"},

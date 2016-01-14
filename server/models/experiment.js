@@ -1,3 +1,9 @@
+/**
+ * The model for experiments.
+ * @module
+ */
+
+
 var database = require("../db");
 var hash = require("../util").hash;
 
@@ -35,6 +41,7 @@ Experiment.prototype.cleanURL = function(){
     res = res.replace(/(%3A|%2F)/g, "."); // http://
     res = res.replace(/(%7E|~)/g, "");
     this.sourceUrl = res;
+    this.cleaned = true;
     return res;
 };
 
@@ -62,7 +69,7 @@ Experiment.prototype.connectToCollection = function(cb){
         this.createCollectionName();
     }
     database.getDB(function(err, db){
-        if(err) cb(err);
+        if(err) return cb(err);
         var coll = db.collection(that.collectionName);
         cb(null, coll);
     });
@@ -160,10 +167,9 @@ Experiment.prototype.removeExperiment = function(cb){
  * the source URL and the experiment name and returns it to the 
  * callback. This will be used initially in makecsv, but later on we
  * should switch to a more stream-based way of working.
- * @param {string} [destination] The destination CSV the data was sent.
+ * @param {string} [destination="default.csv"] The destination CSV the data was sent.
  * Conforming to the old CSV style, "default.csv" is the default, so
- * data for which no destination was specified goes there. Also, it's 
- * optional, so default is "default.csv", right.
+ * data for which no destination was specified goes there.
  * @param {Function} cb An (err, results) style callback which is
  * given the results. It should return an error if no such experiment
  * is there in the db.
@@ -249,8 +255,6 @@ Experiment.prototype.write = function(query, cb, errcnt){
  * the callback. It checks out whether the colleciton exists at all,
  * and returns 1 if it does not, or returns the lowest UFN otherwise.
  * If runs into an error, returns 0.
- * @param {string} htmlSource The HTML source from the client.
- * @param {string} experimentName The experiment name from the client.
  * @param {Function} cb The callback function that takes the result as
  * an argument. Result is 0 if error, the UFN otherwise.
  */
