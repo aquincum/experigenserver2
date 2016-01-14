@@ -1,7 +1,7 @@
 /** Handles the getDestinations query
  * @module */
 
-var db = require("../db");
+var Experiment = require("../models/experiment");
 
 
 /**
@@ -18,7 +18,8 @@ var getDestinations = function(req, res){
     if (!experimentName || !sourceurl){
         return fail();
     }
-    db.getDestinations(sourceurl, experimentName, function(err, dests){
+    var experiment = new Experiment(sourceurl, experimentName);
+    experiment.getDestinations(function(err, dests){
         if(err !== null){
             res.end(err);
         }

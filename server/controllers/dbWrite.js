@@ -1,7 +1,7 @@
 /** Handles the DB write query
  * @module */
 
-var db = require("../db");
+var Experiment = require("../models/experiment");
 
 /**
  * Writes data coming from the experiment into the database. Everything goes
@@ -26,8 +26,9 @@ var dbWrite = function(req, res){
     var query = req.query;
     query.IP = req.ip;
     query.time = (new Date()).getTime();
+    var experiment = new Experiment(sourceurl, experimentName);
     // let's pass on everything now to the db, I'll clean up there.
-    db.write(query, function (success){
+    experiment.write(query, function (success){
         if(success){
             res.end("(\"true\")");
         }

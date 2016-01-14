@@ -1,7 +1,7 @@
 /** Handles the `getuserid` query
  * @module */
 
-var db = require("../db");
+var Experiment = require("../models/experiment");
 
 /**
  * Posts the userfilename/user ID to the client.
@@ -14,7 +14,8 @@ var getUserID = function(req, res){
         res.end("(\"0\")");
     }
     else {
-        db.getUserFileName(html, expname, function (ufn){
+        var experiment = new Experiment(html, expname);
+        experiment.getUserFileName(function (ufn){
             res.end("(\"" + ufn.toString() + "\")");
         });
     }

@@ -3,7 +3,7 @@
  * @module
  */
 
-var db = require("../db");
+var Experiment = require("../models/experiment");
 var util = require("../util");
 
 
@@ -18,7 +18,7 @@ var util = require("../util");
  */
 var writeObjectsToClient = function(err, data, res, cb){
     if(err){
-        if(err == db.NOSUCHEXPERIMENT){ // ah let's just do this
+        if(err == Experiment.NOSUCHEXPERIMENT){ // ah let's just do this
             res.end("No such experiment!");
         }
         else {
@@ -59,7 +59,8 @@ var makeCSV = function(req, res){
     if(!file){
         file = "default.csv";
     }
-    db.getAllData(sourceurl, experimentName, file, function(err, data){
+    var experiment = new Experiment(sourceurl, experimentName);
+    experiment.getAllData(file, function(err, data){
         writeObjectsToClient(err, data, res);
     });
 };
@@ -79,7 +80,8 @@ var getUsers = function(req, res){
     if (!experimentName || !sourceurl){
         return fail();
     }
-    db.users(sourceurl, experimentName, function(err,data){
+    var experiment = new Experiment(sourceurl, experimentName);
+    experiment.users(function(err,data){
         writeObjectsToClient(err, data, res);
     });
 };

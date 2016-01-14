@@ -2,12 +2,14 @@ var assert = require("assert");
 var routing = require("../server/routing");
 var db = require("../server/db");
 var util = require("../server/util");
+var Experiment = require("../server/models/experiment");
 var fs = require("fs");
 var request = require("supertest");
 
 var NTOWRITE = 100;
 var tempsourceurl = "http://localhost/testing/now";
 var tempexperimentname = "000test000";
+var experiment = new Experiment(tempsourceurl, tempexperimentname);
 var written = 0;
 // let's do this
 var server;
@@ -98,23 +100,23 @@ describe("URL cleaning", function(){
 			  "asdasdasd!asd",
 			   "()mhm'"];
 	teststrings.map(function(ts){
-	    assert.equal(util.cleanURL(ts), ts);
+	    assert.equal((new Experiment(ts)).cleanURL(), ts);
 	});
     });
     it("should take off http://", function(){
-	assert.equal(util.cleanURL("http://my.site"), "my.site");
+	assert.equal((new Experiment("http://my.site")).cleanURL(), "my.site");
     });
     it("should chop off /", function(){
-	assert.equal(util.cleanURL("http://my.site/"), "my.site");
+	assert.equal((new Experiment("http://my.site/")).cleanURL(), "my.site");
     });
     it("should be replacing : and / with dots", function(){
-	assert.equal(util.cleanURL("http://my.site/my/path/"), "my.site.my.path");
+	assert.equal((new Experiment("http://my.site/my/path/")).cleanURL(), "my.site.my.path");
     });
     it("should be removing tildes", function(){
-	assert.equal(util.cleanURL("http://my.site/~home/"), "my.site.home");
+	assert.equal((new Experiment("http://my.site/~home/")).cleanURL(), "my.site.home");
     });
     it("should not take off https://", function(){
-	assert.equal(util.cleanURL("https://my.site/"), "https...my.site");
+	assert.equal((new Experiment("https://my.site/")).cleanURL(), "https...my.site");
     });
 });
 
@@ -133,9 +135,9 @@ describe("Hashing", function(){
 	assert.equal(util.hash(teststrings[0]+teststrings[1]).length < 14, true);
     });
     it("Should create unique collection names", function(){
-	var cn = util.createCollectionName(teststrings[0], teststrings[1]);
-	assert.equal(cn, util.createCollectionName(teststrings[0], teststrings[1]));
-	assert.notEqual(cn, util.createCollectionName(teststrings[0]+"q", teststrings[1]));
+	var cn = (new Experiment(teststrings[0], teststrings[1])).createCollectionName();
+	assert.equal(cn, (new Experiment(teststrings[0], teststrings[1])).createCollectionName());
+	assert.notEqual(cn, (new Experiment(teststrings[0]+"q", teststrings[1])).createCollectionName());
 	assert.equal(cn.slice(0,3), "exp");
     });
 });
@@ -150,7 +152,8 @@ describe("Database", function(){
 	});
     });
     it("Should give me 1 as userfilename in a new experiment", function(done){
-	db.getUserFileName(tempsourceurl, tempexperimentname + "even.newer", function(result){
+        var newexperiment = new Experiment(tempsourceurl, tempexperimentname + "even.newer");
+	newexperiment.getUserFileName(function(result){
 	    assert.equal(result, 1);
 	    done();
 	});
@@ -176,7 +179,7 @@ describe("Database", function(){
 	    var inserted = JSON.parse(q);
 	    inserted.i = i;
 	    if(i%15 === 0) inserted.userCode = "TesterFizzBuzz";
-	    db.write(inserted, writecb);
+	    experiment.write(inserted, writecb);
 	}
 	// let's write one more to a different destination.
 	var diffDest = JSON.parse(q);
@@ -184,14 +187,14 @@ describe("Database", function(){
 	diffDest.fieldOnlyHere = 1;
 	diffDest.userCode = "WeirdTester";
 	delete diffDest.i;
-	db.write(diffDest, function(succ){
+	experiment.write(diffDest, function(succ){
 	    assert.equal(succ, true);
 	    ran++;
 	    if (ran == NTOWRITE+1) wrapup();
 	});
     });
     it("Should be able to give me back all the data in an Array", function(done){
-	db.getAllData(tempsourceurl, tempexperimentname, function(err, results){
+	experiment.getAllData(function(err, results){
 	    assert.equal(err, null);
 	    assert.equal(results.length, written);
 	    //	    assert.equal(results[432].i, 432);
@@ -201,7 +204,7 @@ describe("Database", function(){
 	});
     });
     it("Should be able to write to a different destination", function(done){
-	db.getAllData(tempsourceurl, tempexperimentname, "different.csv", function(err, results){
+	experiment.getAllData("different.csv", function(err, results){
 	    assert.equal(err, null);
 	    assert.equal(results.length, 1);
 	    assert.equal(results[0].destination, "different.csv");
@@ -267,7 +270,10 @@ describe("dbwrite", function(){
     });
     it("Which should be there in the database", function(done){
 	db.getDB(function(err, _db){
-	    var collname = util.createCollectionName(util.cleanURL(tempsourceurl), tempexperimentname + "q");
+            var qexperiment = new Experiment(tempsourceurl, tempexperimentname + "q");
+            qexperiment.cleanURL();
+	    var collname = qexperiment.createCollectionName();
+            console.log("XXX", collname);
             _db.collection(collname).count({}, function(err, n){
                 assert.equal(err, null);
                 assert.equal(n, 1);
@@ -441,15 +447,15 @@ describe("Get destinations", function(){
 });
 
 
-describe("Removal", function(){	 
+describe("Removal", function(){
     it("Should be able to remove an experiment", function(done){
-	db.removeExperiment(tempsourceurl, tempexperimentname, function(err, res){
+	experiment.removeExperiment(function(err, res){
 	    assert.equal(err, null);
 	    assert.ok(res.result);
 	    assert.equal(res.result.ok, 1);
 	    assert.equal(res.result.n, written+1);
-	    db.getAllData(tempsourceurl, tempexperimentname, function(err, results){
-		assert.equal(err, db.NOSUCHEXPERIMENT);
+	    experiment.getAllData(function(err, results){
+		assert.equal(err, Experiment.NOSUCHEXPERIMENT);
 		done();
 	    });
 	});
@@ -458,12 +464,11 @@ describe("Removal", function(){
 
 describe.skip("Stresstest", function(){
     var STRESSN = 100000;
+    var stressExp = new Experiment(tempsourceurl, tempexperimentname + ".stresstest");
     this.timeout(100 * 1000);
     it("Should be able to write " + STRESSN + " documents", function(done){
-	db.getDB(function(err, db){
+        stressExp.connectToCollection(function(err, coll){
 	    assert.equal(err, null);
-	    var collname = util.createCollectionName(util.cleanURL(tempsourceurl), tempexperimentname + ".stresstest");
-	    var coll = db.collection(collname);
 	    var docs = [];
 	    for(var i = 0; i < STRESSN; i++){
 		docs.push({experimentName: tempexperimentname + ".stresstest",
@@ -492,7 +497,7 @@ describe.skip("Stresstest", function(){
             .end(done);
     });
     it("Should be able to clean up", function(done){
-	db.removeExperiment(tempsourceurl, tempexperimentname + ".stresstest", function(err, res){
+	stressExp.removeExperiment(function(err, res){
 	    assert.equal(err, null);
 	    assert.ok(res.result);
 	    assert.equal(res.result.ok, 1);

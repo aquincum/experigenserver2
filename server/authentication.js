@@ -16,6 +16,9 @@ var passport = require("passport"),
 
 var experimenterModel = require("./models/experimenter");
 
+
+/** The authentication middleware used in Express
+ */
 var authenticate = passport.authenticate.bind(passport, ["digest"]);
 
 
