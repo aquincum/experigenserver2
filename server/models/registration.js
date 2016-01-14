@@ -46,7 +46,7 @@ Registration.prototype.mongoRepresentation = function(){
 };
 /**
  * A callback function which indicates whether a register operation was successful.
- * @callback Registration~registerCallback
+ * @callback registerCallback
  * @param {?String} err An error indicating what went wrong. Could be forwarded
  * to the end user,
  */
@@ -55,7 +55,7 @@ Registration.prototype.mongoRepresentation = function(){
  * Registers the registration (my English fails). Will fire the error if
  * the experiment is already registered or if there is data in the experiment
  * already.
- * @param {Registration~registerCallback} cb The callback function which indicates
+ * @param {module:server/models/registration~registerCallback} cb The callback function which indicates
  * if the operation was successful.
  */
 Registration.prototype.register = function(cb){

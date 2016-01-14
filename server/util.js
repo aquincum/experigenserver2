@@ -80,7 +80,7 @@ module.exports.Logger = {
     /** Log some message with timestamp */
     log: function(s){
         var msg = (new Date()).toString() + "\t" + s + "\n";
-        fs.appendFile(this.file, msg);
+        fs.appendFileSync(this.file, msg);
     }
 };
 
