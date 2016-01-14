@@ -6,7 +6,7 @@
   "scripts": {
     "postinstall": "node_modules/bower/bin/bower install -F --allow-root",
     "start": "node main.js",
-    "jsdoc": "node ./node_modules/jsdoc/jsdoc.js -R README.md -d doc *.js server/*.js",
+    "jsdoc": "node ./node_modules/jsdoc/jsdoc.js -r -R README.md -d doc main.js server/",
     "test": "./node_modules/mocha/bin/mocha"
   },
   "repository": {

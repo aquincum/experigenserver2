@@ -1,7 +1,7 @@
 /*eslint-env node*/
 
 /** Handles the routing on the server 
- * @module routing
+ * @module
  */
 var db = require("./db");
 var util = require("./util");
@@ -31,7 +31,7 @@ var routes = {
     },
     auth: {
         get: {
-            "/me": authCtrl.me,
+            "/me": authCtrl.me
         },
         put: {
             "/experimenter": authCtrl.putExperimenter
@@ -44,7 +44,12 @@ var routes = {
 
 /**
  * A dictionary basically, with routes as keys and handler functions
- * as values.
+ * as values. It has two added levels: so the first key is `auth` or 
+ * `noAuth`, describing routes that need authentication and ones that
+ * do not. The next key is the HTTP method (`get`, `post`, `put`,
+ * `delete`), and finally the route.
+ *
+ * @example routes.auth.get.me == authCtrl.me
  */
 module.exports.routes = routes;
 

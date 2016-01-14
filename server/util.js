@@ -1,7 +1,7 @@
 /*eslint-env node*/
 
 /** Utility tools for other modules
- * @module util
+ * @module
  */
 
 var fnv = require("fnv-plus");

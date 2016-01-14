@@ -1,3 +1,6 @@
+/** Handles the getDestinations query
+ * @module */
+
 var db = require("../db");
 
 

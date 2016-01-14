@@ -1,4 +1,7 @@
-var db = require("../db");
+/** Handles authentication related queries
+ * @module  */
+
+var model = require("../models/experimenter");
 
 
 module.exports.me = function(req,res){
@@ -11,7 +14,7 @@ module.exports.me = function(req,res){
 };
 
 module.exports.getExperimenter = function(req, res){
-    db.findExperimenter(req.query.experimenter, function(err, doc){
+    model.findExperimenter(req.query.experimenter, function(err, doc){
         if(err){
             res.end(err);
         }
@@ -29,7 +32,7 @@ module.exports.postExperimenter = function(req, res){
         res.status(400);
         return res.end("Wrong request!");
     }
-    db.insertExperimenter(req.query.experimenter, req.query.ha1, function(err){
+    model.insertExperimenter(req.query.experimenter, req.query.ha1, function(err){
         if(err){
             if(err=="conflict"){
                 res.status(409);
@@ -46,7 +49,7 @@ module.exports.putExperimenter = function(req, res){
     if(req.user.username !== req.query.experimenter){
         return res.status(403).end("not authorized");
     }
-    db.updateExperimenter(req.query.experimenter, req.query.ha1, function(err){
+    model.updateExperimenter(req.query.experimenter, req.query.ha1, function(err){
         if(err){
             if(err=="not found"){
                 res.status(404);
@@ -63,7 +66,7 @@ module.exports.deleteExperimenter =  function(req, res){
     if(!req.user || (req.user.username !== req.query.experimenter)){
         return res.status(403).end("not authorized");
     }
-    db.deleteExperimenter(req.query.experimenter, function(err){
+    model.deleteExperimenter(req.query.experimenter, function(err){
         if(err){
             if(err=="not found"){
                 res.status(404);

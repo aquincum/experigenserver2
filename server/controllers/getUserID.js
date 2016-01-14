@@ -1,3 +1,6 @@
+/** Handles the `getuserid` query
+ * @module */
+
 var db = require("../db");
 
 /**

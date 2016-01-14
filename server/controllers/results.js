@@ -1,3 +1,8 @@
+/** Handles queries that write data back to the client.
+ * Specifically, `getusers` and `makeCSV`.
+ * @module
+ */
+
 var db = require("../db");
 var util = require("../util");
 

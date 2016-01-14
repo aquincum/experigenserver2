@@ -1,3 +1,6 @@
+/** Handles the DB write query
+ * @module */
+
 var db = require("../db");
 
 /**

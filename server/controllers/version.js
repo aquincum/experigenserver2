@@ -1,3 +1,8 @@
+/** Handles the `version` query
+ * @module
+ */
+
+
 /**
  * Posts the version of the server to the client.
  * Route is /version

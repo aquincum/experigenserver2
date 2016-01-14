@@ -14,7 +14,7 @@ var passport = require("passport"),
     DigestStrategy = require("passport-http").DigestStrategy,
     AnonymousStrategy = require('passport-anonymous').Strategy;
 
-var db = require("./db");
+var experimenterModel = require("./models/experimenter");
 
 var authenticate = passport.authenticate.bind(passport, ["digest"]);
 
@@ -32,7 +32,7 @@ var setup = function(app){
         {qop: "auth",
          realm: "Experimenters"},
         function(username, done){
-            db.findExperimenter(username, function(err, user){
+            experimenterModel.findExperimenter(username, function(err, user){
                 if (err) { return done(err); }
                 if (!user) { return done(null, false); }
                 return done(null, user, user.password);
@@ -51,7 +51,7 @@ var setup = function(app){
     });
 
     passport.deserializeUser(function(user, done) {
-        db.findExperimenter(user, done);
+        experimenterModel.findExperimenter(user, done);
     });
 
     app.use(passport.initialize());
