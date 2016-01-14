@@ -55,21 +55,22 @@ module.exports.routes = routes;
  * .cgi addresses as well.
  */
 module.exports.route = function doRouting(server, emulate) {
+    function noop (res, req, next) {next();}
     authentication.setup(server);
-    for(var method in routes.noAuth){
-        for(var path in routes.noAuth[method]){
-            server[method](path, routes.noAuth[method][path]);
-            if(emulate){
-                server[method](path + ".cgi", routes.noAuth[method][path]);
+    for(var authenticated in routes){
+        for(var method in routes[authenticated]){
+            for(var path in routes[authenticated][method]){
+                server[method](
+                    path,
+                    authenticated == "auth" ?
+                        authentication.authenticate() :
+                        noop,
+                    routes[authenticated][method][path]
+                );
+                if(emulate && authenticated == "noAuth"){
+                    server[method](path + ".cgi", routes[authenticated][method][path]);
+                }
             }
-        }
-    }
-    // Do authentication routing
-    for(var method in routes.auth){
-        for(var path in routes.auth[method]){
-            server[method](path,
-                           authentication.authenticate(),
-                           routes.auth[method][path]);
         }
     }
 };
