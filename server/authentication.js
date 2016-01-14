@@ -16,6 +16,8 @@ var passport = require("passport"),
 
 var db = require("./db");
 
+var authenticate = passport.authenticate.bind(passport, ["digest"]);
+
 
 
 /**
@@ -25,7 +27,7 @@ var db = require("./db");
  * is passed to passport-http. It knows what to do with it.
  * @param {Server} app The Express application 
  */
-var route = function(app){
+var setup = function(app){
     passport.use(new DigestStrategy(
         {qop: "auth",
          realm: "Experimenters"},
@@ -55,84 +57,10 @@ var route = function(app){
     app.use(passport.initialize());
     app.use(passport.session());
     //app.use(passport.authenticate(["digest", "anonymous"]));
-
-    
-    app.get("/me", passport.authenticate(["digest"]),
-            function(req,res){
-                if(req.user){
-                    res.end(req.user.username);
-                }
-                else{
-                    res.end("none");
-                }
-            });
-
-    app.get("/experimenter", function(req, res){
-        db.findExperimenter(req.query.experimenter, function(err, doc){
-            if(err){
-                res.end(err);
-            }
-            else{
-                if(!doc){
-                    return res.status(404).end("none");
-                }
-                res.status(200).end(doc.username);
-            }
-        });
-    });
-    app.post("/experimenter", function(req, res){
-        if(!req.query.experimenter || !req.query.ha1){
-            res.status(400);
-            return res.end("Wrong request!");
-        }
-        db.insertExperimenter(req.query.experimenter, req.query.ha1, function(err){
-            if(err){
-                if(err=="conflict"){
-                    res.status(409);
-                }
-                res.end(err);
-            }
-            else {
-                res.status(200).end("done");
-            }
-        });
-    });
-    app.put("/experimenter", passport.authenticate("digest"), function(req, res){
-        if(req.user.username !== req.query.experimenter){
-            return res.status(403).end("not authorized");
-        }
-        db.updateExperimenter(req.query.experimenter, req.query.ha1, function(err){
-            if(err){
-                if(err=="not found"){
-                    res.status(404);
-                }
-                res.end(err);
-            }
-            else {
-                res.status(200).end("done");
-            }
-        });
-    });
-    app.delete("/experimenter", passport.authenticate("digest"), function(req, res){
-        if(!req.user || (req.user.username !== req.query.experimenter)){
-            return res.status(403).end("not authorized");
-        }
-        db.deleteExperimenter(req.query.experimenter, function(err){
-            if(err){
-                if(err=="not found"){
-                    res.status(404);
-                }
-                res.end(err);
-            }
-            else {
-                res.status(200).end("done");
-            }
-        });
-    });
-    
 };
 
 
 module.exports = {
-    route: route
+    setup: setup,
+    authenticate: authenticate
 };

@@ -12,15 +12,34 @@ var getUserID = require("./controllers/getUserID");
 var dbWrite = require("./controllers/dbWrite");
 var resultsCtrl = require("./controllers/results");
 var getDestinations = require("./controllers/getDestinations");
-
+var authCtrl = require("./controllers/authenticationController");
 
 var routes = {
-    "/version" : postVersion,
-    "/getuserid" : getUserID,
-    "/dbwrite": dbWrite,
-    "/makecsv": resultsCtrl.makeCSV,
-    "/users": resultsCtrl.getUsers,
-    "/destinations": getDestinations
+    noAuth: {
+        get: {
+            "/version" : postVersion,
+            "/getuserid" : getUserID,
+            "/dbwrite": dbWrite,
+            "/makecsv": resultsCtrl.makeCSV,
+            "/users": resultsCtrl.getUsers,
+            "/destinations": getDestinations,
+            "/experimenter": authCtrl.getExperimenter
+        },
+        post: {
+            "/experimenter": authCtrl.postExperimenter
+        }
+    },
+    auth: {
+        get: {
+            "/me": authCtrl.me,
+        },
+        put: {
+            "/experimenter": authCtrl.putExperimenter
+        },
+        delete: {
+            "/experimenter": authCtrl.deleteExperimenter
+        }
+    }
 };
 
 /**
@@ -36,12 +55,21 @@ module.exports.routes = routes;
  * .cgi addresses as well.
  */
 module.exports.route = function doRouting(server, emulate) {
-    for(var path in routes){
-        server.get(path, routes[path]);
-        if(emulate){
-            server.get(path + ".cgi", routes[path]);
+    authentication.setup(server);
+    for(var method in routes.noAuth){
+        for(var path in routes.noAuth[method]){
+            server[method](path, routes.noAuth[method][path]);
+            if(emulate){
+                server[method](path + ".cgi", routes.noAuth[method][path]);
+            }
         }
     }
     // Do authentication routing
-    authentication.route(server);
+    for(var method in routes.auth){
+        for(var path in routes.auth[method]){
+            server[method](path,
+                           authentication.authenticate(),
+                           routes.auth[method][path]);
+        }
+    }
 };
