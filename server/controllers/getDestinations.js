@@ -22,7 +22,12 @@ var getDestinations = function(req, res){
     experiment.getDestinations().then(function(dests){
         res.status(200).end(JSON.stringify(dests));
     }).catch(function(err){
-        res.status(500).end(err);
+        if(err == Experiment.NOSUCHEXPERIMENT){
+            res.status(404).end(err);
+        }
+        else {
+            res.status(500).end(err.toString());
+        }
     });
 };
 

@@ -11,7 +11,7 @@ var MongoClient = require("mongodb").MongoClient,
  * @param {string} username The user name for the account
  * @returns {Promise<user>} The user account
  */
-module.exports.findExperimenter = function(username, cb){
+module.exports.findExperimenter = function(username){
     return MongoClient.connect(url).then(function(db){
         var coll = db.collection("experimenters");
         return coll.findOne({username: username});
@@ -25,10 +25,11 @@ module.exports.findExperimenter = function(username, cb){
  * @returns {Promise}  Promise rejected with "conflict" if
  *  entry already exists.
  */
-module.exports.insertExperimenter = function(username, ha1, cb){
+module.exports.insertExperimenter = function(username, ha1){
+    var coll;
     return MongoClient.connect(url)
         .then(function(db){
-            var coll = db.collection("experimenters");
+            coll = db.collection("experimenters");
             return coll.count({username: username});
         })
         .then (function(n){
@@ -46,10 +47,11 @@ module.exports.insertExperimenter = function(username, ha1, cb){
  * @returns {Promise} Promise rejected with  "not found" if
  *  entry is not found
  */
-module.exports.updateExperimenter = function(username, ha1, cb){
+module.exports.updateExperimenter = function(username, ha1){
+    var coll;
     return MongoClient.connect(url)
         .then(function(db){
-            var coll = db.collection("experimenters");
+            coll = db.collection("experimenters");
             return coll.count({username: username});
         })
         .then(function(err, n){
@@ -67,10 +69,11 @@ module.exports.updateExperimenter = function(username, ha1, cb){
  * @returns {Promise} Promise rejected with "not found" 
  * if entry is not found
  */
-module.exports.deleteExperimenter = function(username, cb){
+module.exports.deleteExperimenter = function(username){
+    var coll;
     return MongoClient.connect(url)
         .then(function(db){
-            var coll = db.collection("experimenters");
+            coll = db.collection("experimenters");
             return coll.count({username: username});
         })
         .then(function(n){

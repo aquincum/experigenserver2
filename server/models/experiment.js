@@ -101,7 +101,7 @@ Experiment.prototype.getDestinations = function(){
                 { $match: {experimentName: that.experimentName}},
                 { $project: {destination: 1}},
                 { $group: {_id: "$destination", records: {$sum: 1}}}
-            ]);
+            ]).toArray();
         }).then(function(dests){
             var retval = [];
             if (dests.length === 0){
@@ -135,7 +135,7 @@ Experiment.prototype.users = function(){
                 { $match: {experimentName: that.experimentName}},
                 { $project: {userCode: 1}},
                 { $group: {_id: "$userCode", records: {$sum: 1}}}
-            ]);
+            ]).toArray();
         }).then(function(users){
             if (users.length === 0){
                 return Promise.reject(NOSUCHEXPERIMENT);
@@ -185,7 +185,7 @@ Experiment.prototype.getAllData = function(destination){
         destination = {$exists: false};
     }
     return this.connectToCollection()
-        .then(function(err, coll){
+        .then(function(coll){
             return coll.find({experimentName: that.experimentName,
                               destination:    destination},
                              { _id: 0 }
@@ -244,7 +244,7 @@ Experiment.prototype.write = function(query, errcnt){
  */
 Experiment.prototype.getUserFileName = function(){
     var that = this;
-    this.connectToCollection()
+    return this.connectToCollection()
         .then (function(coll){
             return coll.aggregate([
                 { $match: {experimentName: that.experimentName} },
@@ -253,8 +253,9 @@ Experiment.prototype.getUserFileName = function(){
                     _id: null,
                 highest: {$max: "$userFileName"}
                 }}
-            ]);
+            ]).toArray();
         }).then(function(result){
+            console.log(result);
             if (result.length === 0){
                 return 1;
             }

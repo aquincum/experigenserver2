@@ -52,7 +52,7 @@ var setup = function(app){
         {qop: "auth",
          realm: "Experimenters"},
         function(username, done){
-            experimenterModel.findExperimenter().then(function(user){
+            experimenterModel.findExperimenter(username).then(function(user){
                 if (!user) {
                     done(null, false);
                 }

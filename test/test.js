@@ -144,42 +144,35 @@ describe("Hashing", function(){
 
 describe("Database", function(){
     this.timeout(10 * 1000);
-    it("Should connect", function(done){
-	db.getDB(function(err, db){
-	    assert.equal(err, null);
+    it("Should connect", function(){
+	return db.getDB().then(function(db){
 	    assert.ok(db);
-	    done();
+            return true;
 	});
     });
-    it("Should give me 1 as userfilename in a new experiment", function(done){
+    it("Should give me 1 as userfilename in a new experiment", function(){
         var newexperiment = new Experiment(tempsourceurl, tempexperimentname + "even.newer");
-	newexperiment.getUserFileName(function(result){
+	return newexperiment.getUserFileName().then(function(result){
 	    assert.equal(result, 1);
-	    done();
+            return true;
 	});
     });
-    it("Should be able to write a lot of data", function(done){
+    it("Should be able to write a lot of data", function(){
 	var q = JSON.stringify({sourceurl: tempsourceurl,
 				experimentName: tempexperimentname,
 				userFileName: 1,
 				userCode: "Tester",
 				response: "good",
 				i: 0});
-	var ran = 0;
-	function wrapup(){
-	    assert.equal(written, NTOWRITE);
-	    done();
-	}
+        var writePromises = [];
 	function writecb(succ){
 	    if(succ) written ++;
-	    ran ++;
-	    if (ran == NTOWRITE+1) wrapup();
 	}
 	for(var i = 0; i < NTOWRITE; i++){
 	    var inserted = JSON.parse(q);
 	    inserted.i = i;
 	    if(i%15 === 0) inserted.userCode = "TesterFizzBuzz";
-	    experiment.write(inserted, writecb);
+	    writePromises.push(experiment.write(inserted).then(writecb));
 	}
 	// let's write one more to a different destination.
 	var diffDest = JSON.parse(q);
@@ -187,28 +180,26 @@ describe("Database", function(){
 	diffDest.fieldOnlyHere = 1;
 	diffDest.userCode = "WeirdTester";
 	delete diffDest.i;
-	experiment.write(diffDest, function(succ){
+        writePromises.push(experiment.write(diffDest).then(function(succ){
 	    assert.equal(succ, true);
-	    ran++;
-	    if (ran == NTOWRITE+1) wrapup();
-	});
+	}));
+        return Promise.all(writePromises).then(function(){
+            assert.equal(written, NTOWRITE);
+            return true;
+        });
     });
-    it("Should be able to give me back all the data in an Array", function(done){
-	experiment.getAllData(function(err, results){
-	    assert.equal(err, null);
+    it("Should be able to give me back all the data in an Array", function(){
+	return experiment.getAllData().then(function(results){
 	    assert.equal(results.length, written);
 	    //	    assert.equal(results[432].i, 432);
 	    assert.equal(results[21].i >= 0, true);
 	    assert.equal(results[written-4].response, "good");
-	    done();
 	});
     });
-    it("Should be able to write to a different destination", function(done){
-	experiment.getAllData("different.csv", function(err, results){
-	    assert.equal(err, null);
+    it("Should be able to write to a different destination", function(){
+	return experiment.getAllData("different.csv").then(function(results){
 	    assert.equal(results.length, 1);
 	    assert.equal(results[0].destination, "different.csv");
-	    done();
 	});
     });
 });
@@ -217,7 +208,7 @@ describe("getuserid", function(){
     it("Should give back 0 if problems in request", function(done){
         request(server)
             .get("/getuserid")
-            .expect(200)
+            .expect(400)
             .expect('("0")', done);
     });
     it("Should give back 1 if new experiment", function(done){
@@ -268,25 +259,30 @@ describe("dbwrite", function(){
             .expect(200)
             .expect('("true")', done);
     });
-    it("Which should be there in the database", function(done){
-	db.getDB(function(err, _db){
-            var qexperiment = new Experiment(tempsourceurl, tempexperimentname + "q");
-            qexperiment.cleanURL();
-	    var collname = qexperiment.createCollectionName();
-            _db.collection(collname).count({}, function(err, n){
-                assert.equal(err, null);
-                assert.equal(n, 1);
-	        _db.collection(collname).findOne({info: now.toString()}, function(err, doc){
-		    assert.equal(err, null);
-		    assert.equal(doc.userCode, "Tester");
-		    assert.equal(doc.IP, "::ffff:127.0.0.1");
-		    _db.collection(collname).remove({info: now.toString()}, function(err, result){
-		        assert.equal(err, null);
-		    assert.equal(result.result.n, 1);
-		        done();
-		    });
-	        });
-            });
+    it("Which should be there in the database", function(){
+	var _db = db.getDB();
+        var qexperiment = new Experiment(tempsourceurl, tempexperimentname + "q");
+        qexperiment.cleanURL();
+	var collname = qexperiment.createCollectionName();
+        return _db.then(function(innerdb){
+            return Promise.all([
+                innerdb.collection(collname).count({})
+                    .then(function(n){
+                        assert.equal(n, 1);
+                        return true;
+                }),
+                innerdb.collection(collname).findOne({info: now.toString()})
+                    .then(function(doc){
+	                assert.equal(doc.userCode, "Tester");
+	                assert.equal(doc.IP, "::ffff:127.0.0.1");
+                        return true;
+                }),
+	        innerdb.collection(collname).remove({info: now.toString()})
+                    .then(function(result){
+		        assert.equal(result.result.n, 1);
+                        return true;
+		    })
+            ]);
 	});
     });
 });
@@ -341,7 +337,7 @@ describe("Make CSV", function(){
         request(server)
             .get('/makecsv?sourceurl=' + tempsourceurl +
                  '&experimentName=' + tempexperimentname + "doesntexist")
-            .expect(200)
+            .expect(404)
 	    .expect("No such experiment!", done);
     });
     it("Should read other CSV's than the default", function(done){
@@ -372,7 +368,7 @@ describe("users.csv", function(){
         request(server)
             .get("/users?sourceurl=" + tempsourceurl + "&" +
                  "&experimentName=" + tempexperimentname + "doesntexist")
-            .expect(200)
+            .expect(404)
             .expect("No such experiment!", done);
     });
     it("Should give me back a valid record count", function(done){
@@ -423,7 +419,7 @@ describe("Get destinations", function(){
         request(server)
             .get("/destinations?sourceurl=" + tempsourceurl + "&" +
                  "&experimentName=" + tempexperimentname + "doesntexist")
-            .expect(200)
+            .expect(404)
             .expect("No such experiment!", done);
     });
     it("Should give back the valid destination list", function(done){
@@ -449,20 +445,17 @@ describe.skip("Stresstest", function(){
     var STRESSN = 100000;
     var stressExp = new Experiment(tempsourceurl, tempexperimentname + ".stresstest");
     this.timeout(100 * 1000);
-    it("Should be able to write " + STRESSN + " documents", function(done){
-        stressExp.connectToCollection(function(err, coll){
-	    assert.equal(err, null);
+    it("Should be able to write " + STRESSN + " documents", function(){
+        return stressExp.connectToCollection().then(function(coll){
 	    var docs = [];
 	    for(var i = 0; i < STRESSN; i++){
 		docs.push({experimentName: tempexperimentname + ".stresstest",
 			   val: i});
 	    }
 	    assert.equal(docs.length, STRESSN);
-	    coll.insertMany(docs, function(err, r){
-		assert.equal(err, null);
-		assert.equal(r.insertedCount, STRESSN);
-		done();
-	    });
+	    return coll.insertMany(docs);
+        }).then(function(r){
+	    assert.equal(r.insertedCount, STRESSN);
 	});
     });
     it("Should be able to get the TSV", function(done){
@@ -477,13 +470,11 @@ describe.skip("Stresstest", function(){
             })
             .end(done);
     });
-    it("Should be able to clean up", function(done){
-	stressExp.removeExperiment(function(err, res){
-	    assert.equal(err, null);
+    it("Should be able to clean up", function(){
+	return stressExp.removeExperiment().then(function(res){
 	    assert.ok(res.result);
 	    assert.equal(res.result.ok, 1);
 	    assert.equal(res.result.n, STRESSN);
-	    done();
 	});	
     });
 });
@@ -636,18 +627,21 @@ describe("Experimenter accounts", function(){
                              });
                             
         });
-        it("Should be there", function(done){
-            db.getDB(function(err, _db){
-                _db.collection("registration").count({}, function(err, n){
-                    assert.equal(err, null);
-                    assert.equal(n, 1);
-                    _db.collection("registration").findOne({experimenter: username}, function(err, doc){
-                        assert.equal(doc.experimenter, username);
-                        assert.equal(doc.experiment.sourceUrl, insideurl);
-                        assert.equal(doc.experiment.experimentName, tempexperimentname + "r");
-                        done();
-                    });
-                });
+        it("Should be there", function(){
+            return db.getDB().then(function(_db){
+                return Promise.all([
+                    _db.collection("registration").count({})
+                        .then(function(n){
+                            assert.equal(n, 1);
+                            return true;
+                        }),
+                    _db.collection("registration").findOne({experimenter: username})
+                        .then(function(doc){
+                            assert.equal(doc.experimenter, username);
+                            assert.equal(doc.experiment.sourceUrl, insideurl);
+                            assert.equal(doc.experiment.experimentName, tempexperimentname + "r");
+                        })
+                ]);
             });
         });
         it("Should reject a bad request", function(done){
@@ -714,12 +708,9 @@ describe("Experimenter accounts", function(){
                                  r.expect(200, done);
                              });
         });
-        it("Should be cleaned up", function(done){
-            db.getDB(function(err, _db){
-                _db.collection("registration").remove({}, function(err, n){
-                    assert.equal(err, null);
-                    done();
-                });
+        it("Should be cleaned up", function(){
+            return db.getDB().then(function(_db){
+                return _db.collection("registration").remove({});
             });
         });
     });
@@ -754,14 +745,12 @@ describe("Experimenter accounts", function(){
                                  r.expect(200).expect("done", done);
                              });
         });
-        it("Finally, experimenter db should be empty", function(done){
-            db.getDB(function(err, db){
-                assert.equal(err, null);
-                db.collection("experimenters").count(function(err, n){
-                    assert.equal(err, null);
-                    assert.equal(n, 0);
-                    done();
-                });
+        it("Finally, experimenter db should be empty", function(){
+            return db.getDB().then(function(_db){
+                return _db.collection("experimenters").count({});
+            }).then(function(n){
+                assert.equal(n, 0);
+                return true;
             });
         });
     });
@@ -769,16 +758,15 @@ describe("Experimenter accounts", function(){
 
 
 describe("Removal", function(){
-    it("Should be able to remove an experiment", function(done){
-	experiment.removeExperiment(function(err, res){
-	    assert.equal(err, null);
+    it("Should be able to remove an experiment", function(){
+	return experiment.removeExperiment().then(function(res){
 	    assert.ok(res.result);
 	    assert.equal(res.result.ok, 1);
 	    assert.equal(res.result.n, written+1);
-	    experiment.getAllData(function(err, results){
-		assert.equal(err, Experiment.NOSUCHEXPERIMENT);
-		done();
-	    });
+            return experiment.getUserFileName();
+	}).then(function(n){
+	    assert.equal(n, 1);
+            return true;
 	});
     });
 });
@@ -786,7 +774,8 @@ describe("Removal", function(){
 
 
 after("Cleaning up", function(){
-    db.closeDB();
-    server.close();
+    return db.closeDB().then(function(){
+        server.close();
+    });
 });
 

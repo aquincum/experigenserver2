@@ -54,9 +54,10 @@ Registration.prototype.mongoRepresentation = function(){
  * readable error. Otherwise returns `true`.
  */
 Registration.prototype.register = function(){
-    var that = this;
+    var that = this, coll;
     return this.connect()
-        .then(function(coll){
+        .then(function(_coll){
+            coll = _coll;
             return coll.count(
                 {
                     "experiment.experimentName": that.experiment.experimentName,
