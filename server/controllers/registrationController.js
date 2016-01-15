@@ -1,3 +1,8 @@
+/**
+ * Handles requests about registrations.
+ * @module
+ */
+
 var Registration = require("../models/registration");
 var Experiment = require("../models/experiment");
 
@@ -9,7 +14,6 @@ var controller = function(method, req, res){
     var experimentName = req.query.experimentName,
         sourceurl = req.query.sourceurl,
         experimenter = req.query.experimenter;
-    console.log("CTRL:", method, req.query);
     if (!experimentName || !sourceurl || !experimenter){
         return res.status(400).end("Wrong request");
     }
@@ -33,7 +37,6 @@ var controller = function(method, req, res){
  * sanity), sourceURL and experimentName.
  */
 module.exports.postRegistration = function(req, res){
-    console.log("HERE");
     controller("register", req, res);
 };
 
@@ -43,4 +46,30 @@ module.exports.postRegistration = function(req, res){
  */
 module.exports.deleteRegistration = function(req, res){
     controller("remove", req, res);
+};
+
+/**
+ * GET request, will find out whether a registration exists, 
+ * based on sourceURL and experimentName.
+ */
+module.exports.getRegistration = function(req, res){
+    var experimentName = req.query.experimentName,
+        sourceurl = req.query.sourceurl;
+    if (!experimentName || !sourceurl){
+        return res.status(400).end("Wrong request");
+    }
+    var experiment = new Experiment(sourceurl, experimentName);
+    Registration.find(experiment, function(err, reg){
+        if(err){
+            res.status(500).end(err);
+        }
+        else {
+            if(!reg){
+                res.status(200).end("false");
+            }
+            else{
+                res.status(200).end("true");
+            }
+        }
+    });
 };

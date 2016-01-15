@@ -24,7 +24,8 @@ var routes = {
             "/makecsv": resultsCtrl.makeCSV,
             "/users": resultsCtrl.getUsers,
             "/destinations": getDestinations,
-            "/experimenter": authCtrl.getExperimenter
+            "/experimenter": authCtrl.getExperimenter,
+            "/registration": regCtrl.getRegistration
         },
         post: {
             "/experimenter": authCtrl.postExperimenter

@@ -21,6 +21,8 @@ var Experiment = function(url, en){
 
 /** Return error for query functions if experiment is not found.
  * @static
+ * @const {String}
+ * @memberof module:server/models/experiment~Experiment
  */
 var NOSUCHEXPERIMENT = Experiment.NOSUCHEXPERIMENT = "No such experiment!";
 
@@ -79,8 +81,8 @@ Experiment.prototype.connectToCollection = function(cb){
 
 /**
  * Returns an array of destination file names. Returns default.csv for
- * empty destination files. Also returns NOSUCHEXPERIMENT for no
- * experiment.
+ * empty destination files. Also returns {@link module:server/models/experiment~Experiment.NOSUCHEXPERIMENT}
+ *  for no experiment.
  * @param {Function} cb An (err, dests) style callback, where dests
  * is an Array of Strings.
  */
@@ -117,8 +119,8 @@ Experiment.prototype.getDestinations = function(cb){
  * database. The return to the callback is an object array.
  * @param {Function} cb An (err, users) style callback, where users is
  * an [{Object}] with each Object having a `userCode` and a `records`
- * field. Returns err with error, {@link module:db~NOSUCHEXPERIMENT}
- * if no such experiment, otherwise err==null;
+ * field. Returns err with error, {@link module:server/models/experiment~Experiment.NOSUCHEXPERIMENT}
+ * if no such experiment, otherwise `err==null`;
  */
 Experiment.prototype.users = function(cb){
     var that = this;

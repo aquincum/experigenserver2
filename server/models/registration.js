@@ -52,6 +52,16 @@ Registration.prototype.mongoRepresentation = function(){
  */
 
 /**
+ * A callback function which returns the found registration or null
+ * @callback findCallback
+ * @param err A possible error
+ * @param {?module:server/models/registration~Registration} reg A registration or
+ * `null` found in the database.
+ */
+
+
+
+/**
  * Registers the registration (my English fails). Will fire the error if
  * the experiment is already registered or if there is data in the experiment
  * already.
@@ -63,7 +73,10 @@ Registration.prototype.register = function(cb){
     this.connect(function(err, coll){
         if(err) cb(err);
         coll.count(
-            {experiment: that.experiment.collectionName},
+            {
+                "experiment.experimentName": that.experiment.experimentName,
+                "experiment.sourceUrl": that.experiment.sourceUrl
+            },
             function(err, n){
                 if(err) return cb(err);
                 if(n > 0){
@@ -98,5 +111,34 @@ Registration.prototype.remove = function(cb){
         coll.remove(that.mongoRepresentation(), cb);
     });
 };
+
+/**
+ * Checks whether an experiment is registered. If it is, it returns 
+ * the registration details, if it is not, it returns `null`
+ * @param {module:server/models/experiment~Experiment} experiment The experiment to find
+ * @param {module:server/models/registration~findCallback} cb Callback with the registration
+ * @static
+ */
+Registration.find = function(experiment, cb){
+    var reg = new Registration("", experiment);
+    reg.connect(function(err, coll){
+        if(err) return cb(err);
+        coll.findOne({
+            "experiment.experimentName": reg.experiment.experimentName,
+            "experiment.sourceUrl": reg.experiment.sourceUrl
+        }, function(err, doc){
+            if(err) return cb(err);
+            if (!doc){
+                cb(null, null);
+            }
+            else{
+                reg.experiment = doc.experiment;
+                reg.experimenter = doc.experimenter;
+                cb(null, reg);
+            }
+        });
+    });
+};
+
 
 module.exports = Registration;

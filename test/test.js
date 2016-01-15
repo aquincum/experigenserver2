@@ -273,7 +273,6 @@ describe("dbwrite", function(){
             var qexperiment = new Experiment(tempsourceurl, tempexperimentname + "q");
             qexperiment.cleanURL();
 	    var collname = qexperiment.createCollectionName();
-            console.log("XXX", collname);
             _db.collection(collname).count({}, function(err, n){
                 assert.equal(err, null);
                 assert.equal(n, 1);
@@ -446,22 +445,6 @@ describe("Get destinations", function(){
     });
 });
 
-
-describe("Removal", function(){
-    it("Should be able to remove an experiment", function(done){
-	experiment.removeExperiment(function(err, res){
-	    assert.equal(err, null);
-	    assert.ok(res.result);
-	    assert.equal(res.result.ok, 1);
-	    assert.equal(res.result.n, written+1);
-	    experiment.getAllData(function(err, results){
-		assert.equal(err, Experiment.NOSUCHEXPERIMENT);
-		done();
-	    });
-	});
-    });
-});
-
 describe.skip("Stresstest", function(){
     var STRESSN = 100000;
     var stressExp = new Experiment(tempsourceurl, tempexperimentname + ".stresstest");
@@ -476,8 +459,6 @@ describe.skip("Stresstest", function(){
 	    }
 	    assert.equal(docs.length, STRESSN);
 	    coll.insertMany(docs, function(err, r){
-		console.log("ERR: " + err);
-		console.log("R: " + r);
 		assert.equal(err, null);
 		assert.equal(r.insertedCount, STRESSN);
 		done();
@@ -645,7 +626,7 @@ describe("Experimenter accounts", function(){
         it("Should register a new experiment", function(done){
             expectAuthDigest("/registration?experimenter=" + username + 
                              "&sourceurl=" + encodeURIComponent(tempsourceurl) +
-                             "&experimentName=" + tempexperimentname,
+                             "&experimentName=" + tempexperimentname + "r",
                              username,
                              password2,
                              "post",
@@ -661,21 +642,70 @@ describe("Experimenter accounts", function(){
                     assert.equal(err, null);
                     assert.equal(n, 1);
                     _db.collection("registration").findOne({experimenter: username}, function(err, doc){
-                        console.log("DOC: ", doc);
                         assert.equal(doc.experimenter, username);
                         assert.equal(doc.experiment.sourceUrl, insideurl);
-                        assert.equal(doc.experiment.experimentName, tempexperimentname);
+                        assert.equal(doc.experiment.experimentName, tempexperimentname + "r");
                         done();
                     });
                 });
             });
         });
-        it.skip("Should reject a bad request");
-        it.skip("Should forbid registering an already existing experiment");
+        it("Should reject a bad request", function(done){
+            expectAuthDigest("/registration?experimenter=" + username + 
+                             "&experimentName=" + tempexperimentname + "r",
+                             username,
+                             password2,
+                             "post",
+                             server,
+                             function(r){
+                                 r.expect(400, done);
+                             });
+        });
+        it("Should forbid registering an already existing experiment", function(done){
+            expectAuthDigest("/registration?experimenter=" + username + 
+                             "&sourceurl=" + encodeURIComponent(tempsourceurl) +
+                             "&experimentName=" + tempexperimentname,
+                             username,
+                             password2,
+                             "post",
+                             server,
+                             function(r){
+                                 r.expect("Experiment already has data!");
+                                 r.expect(500, done);
+                             });
+            
+        });
+        it("Should forbid registering an already registered experiment", function(done){
+            expectAuthDigest("/registration?experimenter=" + username + 
+                             "&sourceurl=" + encodeURIComponent(tempsourceurl) +
+                             "&experimentName=" + tempexperimentname + "r",
+                             username,
+                             password2,
+                             "post",
+                             server,
+                             function(r){
+                                 r.expect("Experiment already registered!");
+                                 r.expect(500, done);
+                             });
+        });
+        it("Should find existing registration", function(done){
+            request(server)
+                .get("/registration?sourceurl=" + encodeURIComponent(tempsourceurl) + 
+                     "&experimentName=" + tempexperimentname + "r")
+                .expect(200)
+                .expect("true", done);
+        });
+        it("Should not find nonexisting registration", function(done){
+            request(server)
+                .get("/registration?sourceurl=" + encodeURIComponent(tempsourceurl) + 
+                     "&experimentName=" + tempexperimentname)
+                .expect(200)
+                .expect("false", done);
+        });
         it("Should remove registration", function(done){
             expectAuthDigest("/registration?experimenter=" + username +
                              "&sourceurl=" + encodeURIComponent(tempsourceurl) +
-                             "&experimentName=" + tempexperimentname,
+                             "&experimentName=" + tempexperimentname + "r",
                              username,
                              password2,
                              "delete",
@@ -734,6 +764,22 @@ describe("Experimenter accounts", function(){
                 });
             });
         });
+    });
+});
+
+
+describe("Removal", function(){
+    it("Should be able to remove an experiment", function(done){
+	experiment.removeExperiment(function(err, res){
+	    assert.equal(err, null);
+	    assert.ok(res.result);
+	    assert.equal(res.result.ok, 1);
+	    assert.equal(res.result.n, written+1);
+	    experiment.getAllData(function(err, results){
+		assert.equal(err, Experiment.NOSUCHEXPERIMENT);
+		done();
+	    });
+	});
     });
 });
 
