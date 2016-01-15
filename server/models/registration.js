@@ -54,7 +54,7 @@ Registration.prototype.mongoRepresentation = function(){
 /**
  * A callback function which returns the found registration or null
  * @callback findCallback
- * @param err A possible error
+ * @param {?String} err A possible error
  * @param {?module:server/models/registration~Registration} reg A registration or
  * `null` found in the database.
  */

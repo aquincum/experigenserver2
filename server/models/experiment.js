@@ -10,12 +10,21 @@ var hash = require("../util").hash;
 
 /**
  * The model for an experiment.
+ * @param {String} souceUrl The (not necessarily yet cleaned) source URL
+ * used to identify the experiment.
+ * @param {String} experimentName The experiment name set by the client
  * @class
  */
-var Experiment = function(url, en){
-    this.sourceUrl = url;
-    this.experimentName = en;
+var Experiment = function(sourceUrl, experimentName){
+    /** @property {String} sourceUrl The source URL*/
+    this.sourceUrl = sourceUrl;
+    /** @property {String} experimentName The experiment name set by the client*/
+    this.experimentName = experimentName;
+    /** @property {Boolean} cleaned Whether the cleaning has been done*/
     this.cleaned = false;
+    /** @property {String} collectionName The collection name to be used in the
+     * database */
+    this.collectionName = null;
     return this;
 };
 
