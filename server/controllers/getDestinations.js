@@ -19,13 +19,10 @@ var getDestinations = function(req, res){
         return fail();
     }
     var experiment = new Experiment(sourceurl, experimentName);
-    experiment.getDestinations(function(err, dests){
-        if(err !== null){
-            res.end(err);
-        }
-        else {
-            res.end(JSON.stringify(dests));
-        }
+    experiment.getDestinations().then(function(dests){
+        res.status(200).end(JSON.stringify(dests));
+    }).catch(function(err){
+        res.status(500).end(err);
     });
 };
 

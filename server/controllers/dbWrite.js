@@ -28,14 +28,14 @@ var dbWrite = function(req, res){
     query.time = (new Date()).getTime();
     var experiment = new Experiment(sourceurl, experimentName);
     // let's pass on everything now to the db, I'll clean up there.
-    experiment.write(query, function (success){
+    experiment.write(query).then(function (success){
         if(success){
             res.end("(\"true\")");
         }
         else {
             fail();
         }
-    });
+    }).catch(fail);
 };
 
 module.exports = dbWrite;

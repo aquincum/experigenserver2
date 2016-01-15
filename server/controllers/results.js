@@ -13,16 +13,14 @@ var util = require("../util");
  * @param err Error object or null if no error
  * @param {Object[]} data Array of objects to write out
  * @param {Express.response} res The response object.
- * @param {Function} [cb] An optional callback to be called after
- * writeout
  */
-var writeObjectsToClient = function(err, data, res, cb){
+var writeObjectsToClient = function(err, data, res){
     if(err){
         if(err == Experiment.NOSUCHEXPERIMENT){ // ah let's just do this
-            res.end("No such experiment!");
+            res.status(404).end("No such experiment!");
         }
         else {
-            res.end("Error: " + err);
+            res.status(500).end("Error: " + err);
         }
     }
     else {
@@ -31,10 +29,7 @@ var writeObjectsToClient = function(err, data, res, cb){
         data.forEach(function(line){
             res.write(util.formTSVLine(line, fields));
         });
-        res.end();
-        if(cb){
-            res.on("finish", cb);
-        }
+        res.status(200).end();
     }
 };
 
@@ -60,8 +55,10 @@ var makeCSV = function(req, res){
         file = "default.csv";
     }
     var experiment = new Experiment(sourceurl, experimentName);
-    experiment.getAllData(file, function(err, data){
-        writeObjectsToClient(err, data, res);
+    experiment.getAllData(file).then(function(data){
+        writeObjectsToClient(null, data, res);
+    }).catch(function(err){
+        writeObjectsToClient(err, null, res);
     });
 };
 
@@ -81,8 +78,10 @@ var getUsers = function(req, res){
         return fail();
     }
     var experiment = new Experiment(sourceurl, experimentName);
-    experiment.users(function(err,data){
-        writeObjectsToClient(err, data, res);
+    experiment.users().then(function(data){
+        writeObjectsToClient(null, data, res);
+    }).catch(function(err){
+        writeObjectsToClient(err, null, res);
     });
 };
 

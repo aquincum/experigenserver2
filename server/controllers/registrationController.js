@@ -22,14 +22,13 @@ var controller = function(method, req, res){
     }
     var experiment = new Experiment(sourceurl, experimentName);
     var registration = new Registration(experimenter, experiment);
-    registration[method](function(err, succ){
-        if(err){
-            res.status(500).end(err);
-        }
-        else{
-            res.status(200).end(succ.toString());
-        }
+    registration[method]().then(function(succ){
+        res.status(200).end(succ.toString());
+    }).catch(function(err){
+        res.status(500).end(err);
     });
+
+
 };
 
 /**
@@ -59,17 +58,14 @@ module.exports.getRegistration = function(req, res){
         return res.status(400).end("Wrong request");
     }
     var experiment = new Experiment(sourceurl, experimentName);
-    Registration.find(experiment, function(err, reg){
-        if(err){
-            res.status(500).end(err);
+    Registration.find(experiment).then(function(reg){
+        if(!reg){
+            res.status(200).end("false");
         }
-        else {
-            if(!reg){
-                res.status(200).end("false");
-            }
-            else{
-                res.status(200).end("true");
-            }
+        else{
+            res.status(200).end("true");
         }
+    }).catch(function(err){
+        res.status(500).end(err);
     });
 };

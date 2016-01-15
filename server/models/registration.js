@@ -25,13 +25,14 @@ var Registration = function (experimenter, experiment){
 
 /**
  * Connects to the database
+ * @returns {Promise}
  */
-Registration.prototype.connect = function(cb){
+Registration.prototype.connect = function(){
     this.experiment.cleanURL();
     this.experiment.createCollectionName();
-    database.getDB(function(err, db){
+    return database.getDB().then(function(db){
         var coll = db.collection("registration");
-        cb(err, coll);
+        return coll;
     });
 };
 
@@ -44,71 +45,49 @@ Registration.prototype.mongoRepresentation = function(){
         experimenter: this.experimenter,
     };
 };
-/**
- * A callback function which indicates whether a register operation was successful.
- * @callback registerCallback
- * @param {?String} err An error indicating what went wrong. Could be forwarded
- * to the end user,
- */
-
-/**
- * A callback function which returns the found registration or null
- * @callback findCallback
- * @param {?String} err A possible error
- * @param {?module:server/models/registration~Registration} reg A registration or
- * `null` found in the database.
- */
-
-
 
 /**
  * Registers the registration (my English fails). Will fire the error if
  * the experiment is already registered or if there is data in the experiment
  * already.
- * @param {module:server/models/registration~registerCallback} cb The callback function which indicates
- * if the operation was successful.
+ * @returns {Promise<Boolean>} A promise that will reject if unsuccessful with a human-
+ * readable error. Otherwise returns `true`.
  */
-Registration.prototype.register = function(cb){
+Registration.prototype.register = function(){
     var that = this;
-    this.connect(function(err, coll){
-        if(err) cb(err);
-        coll.count(
-            {
-                "experiment.experimentName": that.experiment.experimentName,
-                "experiment.sourceUrl": that.experiment.sourceUrl
-            },
-            function(err, n){
-                if(err) return cb(err);
-                if(n > 0){
-                    return cb("Experiment already registered!");
-                }
-                that.experiment.users(function(err, u){
-                    if(err == Experiment.NOSUCHEXPERIMENT){
-                        // good!
-                        coll.insert(that.mongoRepresentation(),
-                                    function(err, result){
-                                        if(err) cb(err);
-                                        else cb(null, true); // we're ripe to Promisify
-                                    });
-                    }
-                    else {
-                        if(err) return cb(err);
-                        cb("Experiment already has data!");
-                    }
+    return this.connect()
+        .then(function(coll){
+            return coll.count(
+                {
+                    "experiment.experimentName": that.experiment.experimentName,
+                    "experiment.sourceUrl": that.experiment.sourceUrl
                 });
-            });
-    });
+        }).then(function(n){
+            if(n > 0){
+                return Promise.reject("Experiment already registered!");
+            }
+            return that.experiment.getUserFileName();
+        }).then(function(ufn){
+            if(ufn === 1){
+                // good!
+                return coll.insert(that.mongoRepresentation());
+            }
+            else {
+                return Promise.reject("Experiment already has data!");
+            }
+        }).then(function(){
+            return true;
+        });
 };
 
 /**
  * Removes registration.
- * @param {Function} cb Callback
+ * @returns <Promise>
  */
-Registration.prototype.remove = function(cb){
+Registration.prototype.remove = function(){
     var that = this;
-    this.connect(function(err, coll){
-        if(err) return cb(err);
-        coll.remove(that.mongoRepresentation(), cb);
+    return this.connect().then(function(coll){
+        return coll.remove(that.mongoRepresentation());
     });
 };
 
@@ -116,28 +95,28 @@ Registration.prototype.remove = function(cb){
  * Checks whether an experiment is registered. If it is, it returns 
  * the registration details, if it is not, it returns `null`
  * @param {module:server/models/experiment~Experiment} experiment The experiment to find
- * @param {module:server/models/registration~findCallback} cb Callback with the registration
+ * @returns {Promise<Registration>} A promise resolved with the found registration or
+ * with `null` if no registration is found.
  * @static
  */
-Registration.find = function(experiment, cb){
+Registration.find = function(experiment){
     var reg = new Registration("", experiment);
-    reg.connect(function(err, coll){
-        if(err) return cb(err);
-        coll.findOne({
-            "experiment.experimentName": reg.experiment.experimentName,
-            "experiment.sourceUrl": reg.experiment.sourceUrl
-        }, function(err, doc){
-            if(err) return cb(err);
+    return reg.connect()
+        .then(function(coll){
+            return coll.findOne({
+                "experiment.experimentName": reg.experiment.experimentName,
+                "experiment.sourceUrl": reg.experiment.sourceUrl
+            });
+        }).then(function(doc){
             if (!doc){
-                cb(null, null);
+                return null;
             }
-            else{
+            else {
                 reg.experiment = doc.experiment;
                 reg.experimenter = doc.experimenter;
-                cb(null, reg);
+                return reg;
             }
         });
-    });
 };
 
 

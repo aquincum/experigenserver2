@@ -52,10 +52,15 @@ var setup = function(app){
         {qop: "auth",
          realm: "Experimenters"},
         function(username, done){
-            experimenterModel.findExperimenter(username, function(err, user){
-                if (err) { return done(err); }
-                if (!user) { return done(null, false); }
-                return done(null, user, user.password);
+            experimenterModel.findExperimenter().then(function(user){
+                if (!user) {
+                    done(null, false);
+                }
+                else {
+                    done(null, user, user.password);
+                }
+            }).catch(function(err){
+                done(err);
             });
         },
         function(params, done) {
@@ -71,7 +76,11 @@ var setup = function(app){
     });
 
     passport.deserializeUser(function(user, done) {
-        experimenterModel.findExperimenter(user, done);
+        experimenterModel.findExperimenter().then(function(found){
+            done(null, found);
+        }).catch(function(err){
+            done(err);
+        });
     });
 
     app.use(passport.initialize());

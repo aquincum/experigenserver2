@@ -14,16 +14,15 @@ module.exports.me = function(req,res){
 };
 
 module.exports.getExperimenter = function(req, res){
-    model.findExperimenter(req.query.experimenter, function(err, doc){
-        if(err){
-            res.end(err);
+    model.findExperimenter(req.query.experimenter).then(function(doc){
+        if(!doc){
+            res.status(404).end("none");
         }
-        else{
-            if(!doc){
-                return res.status(404).end("none");
-            }
+        else {
             res.status(200).end(doc.username);
         }
+    }).catch(function(err){
+        res.status(500).end(err);
     });
 };
 
@@ -32,49 +31,52 @@ module.exports.postExperimenter = function(req, res){
         res.status(400);
         return res.end("Wrong request!");
     }
-    model.insertExperimenter(req.query.experimenter, req.query.ha1, function(err){
-        if(err){
+    model.insertExperimenter(req.query.experimenter, req.query.ha1)
+        .then(function(){
+            res.status(200).end("done");
+        }).catch(function(err){
             if(err=="conflict"){
                 res.status(409);
             }
+            else{
+                res.status(500);
+            }
             res.end(err);
-        }
-        else {
-            res.status(200).end("done");
-        }
-    });
+        });
 };
 
 module.exports.putExperimenter = function(req, res){
     if(req.user.username !== req.query.experimenter){
         return res.status(403).end("not authorized");
     }
-    model.updateExperimenter(req.query.experimenter, req.query.ha1, function(err){
-        if(err){
+    model.updateExperimenter(req.query.experimenter, req.query.ha1)
+        .then(function(){
+            res.status(200).end("done");
+        }).catch(function(err){
             if(err=="not found"){
                 res.status(404);
             }
+            else{
+                res.status(500);
+            }
             res.end(err);
-        }
-        else {
-            res.status(200).end("done");
-        }
-    });
+        });
 };
 
 module.exports.deleteExperimenter =  function(req, res){
     if(!req.user || (req.user.username !== req.query.experimenter)){
         return res.status(403).end("not authorized");
     }
-    model.deleteExperimenter(req.query.experimenter, function(err){
-        if(err){
+    model.deleteExperimenter(req.query.experimenter)
+        .then(function(){
+            res.status(200).end("done");
+        }).catch(function(err){
             if(err=="not found"){
                 res.status(404);
             }
+            else {
+                res.status(500);
+            }
             res.end(err);
-        }
-        else {
-            res.status(200).end("done");
-        }
-    });
+        });
 };
