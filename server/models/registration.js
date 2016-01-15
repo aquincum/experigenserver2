@@ -65,7 +65,7 @@ Registration.prototype.register = function(){
                 });
         }).then(function(n){
             if(n > 0){
-                return Promise.reject("Experiment already registered!");
+                throw new Error("Experiment already registered!");
             }
             return that.experiment.getUserFileName();
         }).then(function(ufn){
@@ -74,7 +74,7 @@ Registration.prototype.register = function(){
                 return coll.insert(that.mongoRepresentation());
             }
             else {
-                return Promise.reject("Experiment already has data!");
+                throw new Error("Experiment already has data!");
             }
         }).then(function(){
             return true;

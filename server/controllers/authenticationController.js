@@ -35,13 +35,12 @@ module.exports.postExperimenter = function(req, res){
         .then(function(){
             res.status(200).end("done");
         }).catch(function(err){
-            if(err=="conflict"){
-                res.status(409);
+            if(err.message=="conflict"){
+                res.status(409).end(err.message);
             }
             else{
-                res.status(500);
+                res.status(500).end(err.toString());
             }
-            res.end(err);
         });
 };
 

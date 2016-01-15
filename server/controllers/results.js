@@ -58,7 +58,7 @@ var makeCSV = function(req, res){
     experiment.getAllData(file).then(function(data){
         writeObjectsToClient(null, data, res);
     }).catch(function(err){
-        writeObjectsToClient(err, null, res);
+        writeObjectsToClient(err.message, null, res);
     });
 };
 
@@ -81,7 +81,7 @@ var getUsers = function(req, res){
     experiment.users().then(function(data){
         writeObjectsToClient(null, data, res);
     }).catch(function(err){
-        writeObjectsToClient(err, null, res);
+        writeObjectsToClient(err.message, null, res);
     });
 };
 

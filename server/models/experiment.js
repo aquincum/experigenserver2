@@ -105,7 +105,7 @@ Experiment.prototype.getDestinations = function(){
         }).then(function(dests){
             var retval = [];
             if (dests.length === 0){
-                return Promise.reject(NOSUCHEXPERIMENT);
+                throw new Error(NOSUCHEXPERIMENT);
             }
             else {
                 dests.forEach(function(d){
@@ -138,7 +138,7 @@ Experiment.prototype.users = function(){
             ]).toArray();
         }).then(function(users){
             if (users.length === 0){
-                return Promise.reject(NOSUCHEXPERIMENT);
+                throw new Error(NOSUCHEXPERIMENT);
             }
             else {
                 users.forEach(function(u){
@@ -194,7 +194,7 @@ Experiment.prototype.getAllData = function(destination){
             return cursor.toArray();
         }).then(function(results){
             if(results.length === 0){
-                return Promise.reject(NOSUCHEXPERIMENT);
+                throw new Error(NOSUCHEXPERIMENT);
             }
             else {
                 return results;

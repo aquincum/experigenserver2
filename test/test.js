@@ -664,7 +664,7 @@ describe("Experimenter accounts", function(){
                              "post",
                              server,
                              function(r){
-                                 r.expect("Experiment already has data!");
+                                 r.expect("Error: Experiment already has data!");
                                  r.expect(500, done);
                              });
             
@@ -678,7 +678,7 @@ describe("Experimenter accounts", function(){
                              "post",
                              server,
                              function(r){
-                                 r.expect("Experiment already registered!");
+                                 r.expect("Error: Experiment already registered!");
                                  r.expect(500, done);
                              });
         });

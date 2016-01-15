@@ -33,7 +33,7 @@ module.exports.insertExperimenter = function(username, ha1){
             return coll.count({username: username});
         })
         .then (function(n){
-            if(n > 0) return Promise.reject("conflict");
+            if(n > 0) throw new Error("conflict");
             return coll.insertOne({username: username,
                                    password: {ha1: ha1},
                                    created: new Date()});
@@ -55,7 +55,7 @@ module.exports.updateExperimenter = function(username, ha1){
             return coll.count({username: username});
         })
         .then(function(err, n){
-            if(n === 0) return Promise.reject("not found");
+            if(n === 0) throw new Error("not found");
             return coll.update({username: username},
                                {username: username,
                                 password: {ha1: ha1},
@@ -77,7 +77,7 @@ module.exports.deleteExperimenter = function(username){
             return coll.count({username: username});
         })
         .then(function(n){
-            if(n === 0) return Promise.reject("not found");
+            if(n === 0) throw new Error("not found");
             return coll.deleteOne({username: username});
         });
 };
