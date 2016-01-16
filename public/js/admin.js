@@ -1,93 +1,118 @@
-function getDestination(){
-    var desttxt = $("input[name=destination]").val();
-    var destsel = $("select#destinationdropdown").val();
-    if (desttxt !== ""){
-        return desttxt;
-    }
-    if (destsel !== null){
-        return destsel;
-    }
-    return "";
-}
-
-function apiCall(request, callback){
-    var req = "/" + request + "?",
-        dest = getDestination();
-    respond("");
-    req += "sourceurl=" + $("input[name=sourceURL]").val();
-    req += "&experimentName=" + $("input[name=experimentName]").val();
-    if(dest !== ""){
-        req += "&file=" + dest;
-    }
-
-    $.get(req)
-        .done(function(data){
-            if(data == "No such experiment!"){
-                respond(data, "danger");
-            }
-            else {
-                callback(data);
-            }
-        })
-        .fail(function(){
-            respond("API response error", "danger");
-        });
-}
-
-function respond(s, alertstatus){
-    $("#status").html(s);
-    $("#status").removeClass("alert-info alert-danger alert-warning alert-success");
-    if(alertstatus){
-        $("#status").addClass("alert-" + alertstatus);
-    }
-}
-$("input[name=checkExistence]").click(function(){
-    apiCall("users", function(data){
-        respond("<strong>Experiment exists.</strong> There are " + (data.split("\n").length - 2) + " users in the database.", "success");
+var app = angular.module("adminApp", []);
+app.controller("statusController", function($scope){
+    $scope.status = {
+        text: "Welcome!",
+        alert: "info"
+    };
+    $scope.$on("statusUpdate",  function (event, s, alertstatus){
+        //        $scope.apply(function(){
+        $scope.status.text = s;
+        if(alertstatus) {
+            $scope.status.alert = alertstatus;
+        }
+//        });
     });
 });
+app.factory("responder", function($rootScope){
+    return {
+        respond: function (s, c){
+            $rootScope.$broadcast("statusUpdate", s, c);
+        }
+    };
+});
 
-
-(function($){    
-    $(function(){
-
-        $("input[name=getData]").click(function(){
-            apiCall("makecsv", function(data){
-                respond("<strong>Success!</strong> Data download should start right away.", "success");
-                var blob = new Blob([data], {type: "octet/stream"}),
-                    url = window.URL.createObjectURL(blob),
-                    a = document.createElement("a");
-                document.body.appendChild(a);
-                a.style = "display: none";
-                a.href = url;
-                a.download = getDestination() || "xp.csv";
-                a.target = "_blank";
-                a.click();
-                window.URL.revokeObjectURL(url);
-            });
-        });
-        $("input[name=findDestinations]").click(function(){
-            apiCall("destinations", function(data){
-                respond("Destination dropdown box populated", "success");
-                var dests = JSON.parse(data);
-                var $dropdown = $("#destinationdropdown");
-                $dropdown.show();
-                var inner = '';
-                $("input[name=destination]").hide();
-                $("input[name=destination]").val("");
-                $dropdown.addClass("dropdown");
-                dests.forEach(function(d){
-                    inner += '<option>' + d + '</option>';
+app.factory("apiService", function($http, responder){
+    return {
+        handleError: function(err){
+            switch(err.status){
+            case 400:
+                responder.respond("Problem with the request. " + err.data, "danger");
+                break;
+            case 403:
+                responder.respond("Unauthorized request! " + err.data, "danger");
+                break;
+            case 404:
+                responder.respond("Experiment does not exist!", "danger");
+                break;
+            case 409:
+                responder.respond("Cannot create a new one, it already exists!", "danger");
+                break;
+            case 500:
+                responder.respond("Internal server error :( " + err.data, "danger");
+                break;
+            default:
+                responder.respond("Odd error :O status code " + err.status + ", message: " + err.data, "danger");
+            }
+        },
+        apiCall: function (request, scope, callback){
+            var req = "/" + request + "?",
+                dest = scope.getDestination();
+            responder.respond("");
+            req += "sourceurl=" + scope.sourceURL;
+            req += "&experimentName=" + scope.experimentName;
+            if(dest !== ""){
+                req += "&file=" + dest;
+            }
+            
+            $http.get(req)
+                .then(function(data){
+                    callback(data);
+                })
+                .catch(function(err){
+                    handleError(err);
                 });
-                $dropdown.append(inner);
-            });
+        }
+    };
+});
+
+app.controller("experimentDownloadController", function($scope, responder, apiService, $window){
+    $scope.sourceURL = "";
+    $scope.experimentName = "";
+    $scope.destination = "";
+    $scope.destList = [];
+    $scope.destListSelect = "";
+
+    $scope.getDestination = function(){
+        if($scope.destList.length > 0){
+            return $scope.destListSelect;
+        }
+        else {
+            return $scope.destination;
+        }
+    };
+    
+    $scope.checkExistence = function(){ 
+        apiService.apiCall("users", $scope, function(data){
+            responder.respond("<strong>Experiment exists.</strong> There are " + (data.split("\n").length - 2) + " users in the database.", "success");
         });
-    });
-})(jQuery);
+    };
+    $scope.getData = function(){
+        apiService.apiCall("makecsv", $scope, function(data){
+            responder.respond("<strong>Success!</strong> Data download should start right away.", "success");
+            var blob = new Blob([data], {type: "octet/stream"}),
+                url = $window.URL.createObjectURL(blob),
+                a = $window.document.createElement("a");
+            $window.document.body.appendChild(a);
+            a.style = "display: none";
+            a.href = url;
+            a.download = $scope.getDestination() || "xp.csv";
+            a.target = "_blank";
+            a.click();
+            $window.URL.revokeObjectURL(url);
+        });
+    };
 
+    $scope.findDestinations = function() {
+        apiService.apiCall("destinations", $scope, function(data){
+            responder.respond("Destination dropdown box populated", "success");
+            var dests = JSON.parse(data);
+            $scope.destination = "";
+            $scope.destList = data;
+        });
+    };
+});
 
-var app = angular.module("adminApp", []);
-app.controller("experimenterCtrl", function($scope){
+app.controller("experimenterCtrl", function($scope, apiService){
     var updateLogin = function(li){
         $scope.$applyAsync(function(){
             $scope.loggedIn = li;
@@ -115,17 +140,8 @@ app.controller("experimenterCtrl", function($scope){
         $.post(req).success(function(data){
             respond($scope.experimenter + " registered!", "success");
             updateLogin(true);
-        }).fail(function(data){
-            switch(data.status){
-            case 400:
-                respond(data, "danger");
-                break;
-            case 409:
-                respond("Experimenter already exists!", "danger");
-                break;
-            default:
-                respond("Unknown error: " + data.responseText, "danger");
-            }
+        }).fail(function(err){
+            apiService.handleError(err);
         });
     };
     $scope.login = function(){
@@ -143,5 +159,5 @@ app.controller("experimenterCtrl", function($scope){
         $scope.username = "";
         $scope.password = "";
         updateLogin(false);
-    }
+    };
 });
