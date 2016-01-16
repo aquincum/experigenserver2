@@ -533,7 +533,7 @@ describe("Experimenter accounts", function(){
     });
     describe("ME", function(){
         it("Should be able to verify login with /me", function(done){
-            expectAuthDigest("/me",
+            expectAuthDigest("/auth/me",
                              username,
                              password1,
                              "get",
@@ -543,7 +543,7 @@ describe("Experimenter accounts", function(){
                              });
         });
         it("Should reject bad login with /me", function(done){
-            expectAuthDigest("/me",
+            expectAuthDigest("/auth/me",
                              username,
                              password2,
                              "get",
@@ -555,7 +555,7 @@ describe("Experimenter accounts", function(){
     });
     describe("update", function(){
         it("Should be able to update the current existing experimenter", function(done){
-            expectAuthDigest("/experimenter?experimenter=" + username + "&ha1=" + ha12,
+            expectAuthDigest("/auth/experimenter?experimenter=" + username + "&ha1=" + ha12,
                              username,
                              password1,
                              "put",
@@ -566,7 +566,7 @@ describe("Experimenter accounts", function(){
         });
         it("Should not update with no login", function(done){
             request(server)
-                .put("/experimenter?experimenter=" + username + 
+                .put("/auth/experimenter?experimenter=" + username + 
                      "&ha1=" + ha11)
                 .expect(401, done);
         });
@@ -577,7 +577,7 @@ describe("Experimenter accounts", function(){
                 .expect(200)
                 .expect("done")
                 .end(function(){
-                    expectAuthDigest("/experimenter?experimenter=" + username + "&ha1=" + ha11,
+                    expectAuthDigest("/auth/experimenter?experimenter=" + username + "&ha1=" + ha11,
                                      username + "x",
                                      password1,
                                      "put",
@@ -588,7 +588,7 @@ describe("Experimenter accounts", function(){
                 });
         });
         it("Should not update with wrong password", function(done){
-            expectAuthDigest("/experimenter?experimenter=" + username + "&ha1=" + ha11,
+            expectAuthDigest("/auth/experimenter?experimenter=" + username + "&ha1=" + ha11,
                              username,
                              password1 + "sure to be false",
                              "put",
@@ -615,7 +615,7 @@ describe("Experimenter accounts", function(){
     describe("Registration", function(){
         var insideurl = (new Experiment(tempsourceurl,"")).cleanURL();
         it("Should register a new experiment", function(done){
-            expectAuthDigest("/registration?experimenter=" + username + 
+            expectAuthDigest("/auth/registration?experimenter=" + username + 
                              "&sourceurl=" + encodeURIComponent(tempsourceurl) +
                              "&experimentName=" + tempexperimentname + "r",
                              username,
@@ -645,7 +645,7 @@ describe("Experimenter accounts", function(){
             });
         });
         it("Should reject a bad request", function(done){
-            expectAuthDigest("/registration?experimenter=" + username + 
+            expectAuthDigest("/auth/registration?experimenter=" + username + 
                              "&experimentName=" + tempexperimentname + "r",
                              username,
                              password2,
@@ -656,7 +656,7 @@ describe("Experimenter accounts", function(){
                              });
         });
         it("Should forbid registering an already existing experiment", function(done){
-            expectAuthDigest("/registration?experimenter=" + username + 
+            expectAuthDigest("/auth/registration?experimenter=" + username + 
                              "&sourceurl=" + encodeURIComponent(tempsourceurl) +
                              "&experimentName=" + tempexperimentname,
                              username,
@@ -670,7 +670,7 @@ describe("Experimenter accounts", function(){
             
         });
         it("Should forbid registering an already registered experiment", function(done){
-            expectAuthDigest("/registration?experimenter=" + username + 
+            expectAuthDigest("/auth/registration?experimenter=" + username + 
                              "&sourceurl=" + encodeURIComponent(tempsourceurl) +
                              "&experimentName=" + tempexperimentname + "r",
                              username,
@@ -695,9 +695,56 @@ describe("Experimenter accounts", function(){
                      "&experimentName=" + tempexperimentname)
                 .expect(200)
                 .expect("false", done);
+        }); 
+        it("Should let me write to registered experiment", function(done){
+            request(server).get("/dbwrite?experimentName=" + tempexperimentname + "r&" +
+                                "sourceurl=" + tempsourceurl + "&" +
+                                "userCode=Tester&" +
+                                "userFileName=1&" +
+                                "info=11"
+                               )
+                .expect(200)
+                .expect('("true")', done);
+        });
+        it("Should let registered access to the registered experiment", function(done){
+            expectAuthDigest("/auth/destinations?sourceurl=" + encodeURIComponent(tempsourceurl) +
+                             "&experimentName=" + tempexperimentname + "r",
+                             username,
+                             password2,
+                             "get",
+                             server,
+                             function(r){
+                                 r.expect(200)
+                                     .expect(function(res){
+                                         var dests;
+                                         assert.doesNotThrow(function(){
+                                             dests = JSON.parse(res.text);
+                                         });
+                                         assert.ok(dests.length);
+                                         assert.equal(dests.length, 1);
+                                         assert.equal(dests[0],"default.csv");
+                                     })
+                                     .end(done);
+                             });
+        });
+        it("Should not let unregistered access to the registered experiment", function(done){
+            request(server).get("/destinations?sourceurl=" + encodeURIComponent(tempsourceurl) +
+                                "&experimentName=" + tempexperimentname + "r")
+                .expect(403, done);
+        });
+        it("Should not let someone else access to the registered experiment", function(done){
+            expectAuthDigest("/auth/destinations?sourceurl=" + encodeURIComponent(tempsourceurl) +
+                             "&experimentName=" + tempexperimentname + "r",
+                             username + "x",
+                             password1,
+                             "get",
+                             server,
+                             function(r){
+                                 r.expect(403, done);
+                             });
         });
         it("Should remove registration", function(done){
-            expectAuthDigest("/registration?experimenter=" + username +
+            expectAuthDigest("/auth/registration?experimenter=" + username +
                              "&sourceurl=" + encodeURIComponent(tempsourceurl) +
                              "&experimentName=" + tempexperimentname + "r",
                              username,
@@ -709,14 +756,18 @@ describe("Experimenter accounts", function(){
                              });
         });
         it("Should be cleaned up", function(){
+            var thisexperiment = new Experiment(tempsourceurl, tempexperimentname+"r");
             return db.getDB().then(function(_db){
-                return _db.collection("registration").remove({});
+                return Promise.all([
+                    _db.collection("registration").remove({}),
+                    thisexperiment.removeExperiment()
+                ]);
             });
         });
     });
     describe("Experimenter deletion", function(){
         it("Should not delete with wrong authentication", function(done){
-            expectAuthDigest("/experimenter?experimenter=" + username,
+            expectAuthDigest("/auth/experimenter?experimenter=" + username,
                              username + "x",
                              password1,
                              "delete",
@@ -726,7 +777,7 @@ describe("Experimenter accounts", function(){
                              });
         });
         it("Should delete the existing experimenter", function(done){
-            expectAuthDigest("/experimenter?experimenter=" + username,
+            expectAuthDigest("/auth/experimenter?experimenter=" + username,
                              username,
                              password2,
                              "delete",
@@ -736,7 +787,7 @@ describe("Experimenter accounts", function(){
                              });
         });
         it("Should delete the other existing experimenter", function(done){
-            expectAuthDigest("/experimenter?experimenter=" + username + "x",
+            expectAuthDigest("/auth/experimenter?experimenter=" + username + "x",
                              username + "x",
                              password1,
                              "delete",

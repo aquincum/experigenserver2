@@ -25,6 +25,7 @@ var controller = function(method, req, res){
     registration[method]().then(function(succ){
         res.status(200).end(succ.toString());
     }).catch(function(err){
+        console.log(err.toString());
         res.status(500).end(err.toString());
     });
 

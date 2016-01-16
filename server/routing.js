@@ -21,9 +21,9 @@ var routes = {
             "/version" : postVersion,
             "/getuserid" : getUserID,
             "/dbwrite": dbWrite,
-            "/makecsv": resultsCtrl.makeCSV,
-            "/users": resultsCtrl.getUsers,
-            "/destinations": getDestinations,
+            "/makecsv": authCtrl.checkRegistration.bind(null, resultsCtrl.makeCSV),
+            "/users": authCtrl.checkRegistration.bind(null, resultsCtrl.getUsers),
+            "/destinations": authCtrl.checkRegistration.bind(null, getDestinations),
             "/experimenter": authCtrl.getExperimenter,
             "/registration": regCtrl.getRegistration
         },
@@ -33,17 +33,20 @@ var routes = {
     },
     auth: {
         get: {
-            "/me": authCtrl.me
+            "/auth/me": authCtrl.me,
+            "/auth/makecsv": authCtrl.checkRegistration.bind(null, resultsCtrl.makeCSV),
+            "/auth/users": authCtrl.checkRegistration.bind(null, resultsCtrl.getUsers),
+            "/auth/destinations": authCtrl.checkRegistration.bind(null, getDestinations)
         },
         post: {
-            "/registration": regCtrl.postRegistration
+            "/auth/registration": regCtrl.postRegistration
         },
         put: {
-            "/experimenter": authCtrl.putExperimenter
+            "/auth/experimenter": authCtrl.putExperimenter
         },
         delete: {
-            "/experimenter": authCtrl.deleteExperimenter,
-            "/registration": regCtrl.deleteRegistration
+            "/auth/experimenter": authCtrl.deleteExperimenter,
+            "/auth/registration": regCtrl.deleteRegistration
         }
     }
 };

@@ -2,7 +2,8 @@
  * @module  */
 
 var model = require("../models/experimenter");
-
+var Experiment = require("../models/experiment");
+var Registration = require("../models/registration");
 
 module.exports.me = function(req,res){
     if(req.user){
@@ -79,3 +80,29 @@ module.exports.deleteExperimenter =  function(req, res){
             res.end(err);
         });
 };
+
+module.exports.checkRegistration = function(toserve, req, res){
+    var sourceUrl = req.query.sourceurl,
+        experimentName = req.query.experimentName,
+        user = req.user ? req.user.username : "";
+
+    if(!sourceUrl || !experimentName){
+        return res.status(400).end("Bad request");
+    }
+
+    var experiment = new Experiment(sourceUrl, experimentName);
+    Registration.find(experiment)
+        .then(function(reg){
+            /* If the experiment is not registered, we will let the experimenter
+             * get the data. */
+            if(!reg || reg.experimenter === user){ 
+                toserve(req, res);
+            }
+            else { // reg.experimenter !== user
+                res.status(403).end("You are not authorized to receive this data, as the experiment is registered to a different experimenter.");
+            }
+        }).catch(function(err){
+            res.status(500).end(err.toString());
+        });
+};
+
