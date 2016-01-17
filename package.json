@@ -42,7 +42,12 @@
     "blanket": "^1.1.9",
     "coveralls": "^2.11.4",
     "ink-docstrap": "^1.1.0",
+    "jasmine-core": "^2.4.1",
     "jsdoc": "^3.3.3",
+    "karma": "^0.13.19",
+    "karma-chrome-launcher": "^0.2.2",
+    "karma-jasmine": "^0.3.6",
+    "karma-phantomjs-launcher": "^0.2.3",
     "mocha-lcov-reporter": "^1.0.0",
     "supertest": "^1.1.0"
   },
