@@ -1,5 +1,5 @@
 var app = angular.module("adminApp", []);
-app.controller("statusController", function($scope){
+app.controller("StatusController", function($scope){
     $scope.status = {
         text: "Welcome!",
         alert: "info"
@@ -22,8 +22,7 @@ app.factory("responder", function($rootScope){
 });
 
 app.factory("apiService", function($http, responder){
-    return {
-        handleError: function(err){
+    var handleError = function(err){
             switch(err.status){
             case 400:
                 responder.respond("Problem with the request. " + err.data, "danger");
@@ -43,8 +42,8 @@ app.factory("apiService", function($http, responder){
             default:
                 responder.respond("Odd error :O status code " + err.status + ", message: " + err.data, "danger");
             }
-        },
-        apiCall: function (request, scope, callback){
+    };
+    var apiCall = function (request, scope, callback){
             var req = "/" + request + "?",
                 dest = scope.getDestination();
             responder.respond("");
@@ -61,11 +60,12 @@ app.factory("apiService", function($http, responder){
                 .catch(function(err){
                     handleError(err);
                 });
-        }
     };
+    return { apiCall: apiCall,
+             handleError: handleError};
 });
 
-app.controller("experimentDownloadController", function($scope, responder, apiService, $window){
+app.controller("ExperimentDownloadController", function($scope, responder, apiService, $window){
     $scope.sourceURL = "";
     $scope.experimentName = "";
     $scope.destination = "";
@@ -112,7 +112,7 @@ app.controller("experimentDownloadController", function($scope, responder, apiSe
     };
 });
 
-app.controller("experimenterCtrl", function($scope, apiService){
+app.controller("ExperimenterCtrl", function($scope, apiService){
     var updateLogin = function(li){
         $scope.$applyAsync(function(){
             $scope.loggedIn = li;

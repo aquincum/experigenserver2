@@ -10,14 +10,14 @@
     <script src="js/admin.js"></script>
   </head>
 
-  <body><div class="container" ng-app="adminApp" ng-controller="statusController">
+  <body><div class="container" ng-app="adminApp" ng-controller="StatusController">
       
       <div class="col-lg-6 col-lg-offset-3">
         <div class="page-header">
           <h1 class="text-center">Experigen <small>administration</small></h1>
         </div>
         
-        <form ng-controller="experimentDownloadController">
+        <form ng-controller="ExperimentDownloadController">
           
           <div class="form-group">
             <label for="sourceURL">The source URL</label>
@@ -56,7 +56,7 @@
       </div>
       <div class="col-lg-3">
         <div class="page-header">
-          <div ng-controller="experimenterCtrl">
+          <div ng-controller="ExperimenterCtrl">
 
             <div class="dropdown">
               <button id="loginDDLabel" data-target="#" data-toggle="dropdown" class="btn btn-default dropdown-toggle" aria-haspopup="true" aria-expanded="false">
