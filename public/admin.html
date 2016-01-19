@@ -32,8 +32,8 @@
           
           <div class="form-group">
             <label for="destination">The destination file (which CSV was the data uploaded to?)</label>
-            <input type="text" ng-model="destination" class="form-control" placeholder="destination (default is the main xp.csv)" ng-hide="$scope.destList.length > 0"></input>
-            <select id="destinationdropdown" class="form-control dropdown" ng-model="destListSelect" ng-show="$scope.destList.length > 0">
+            <input type="text" ng-model="destination" class="form-control" placeholder="destination (default is the main xp.csv)" ng-hide="destList.length > 0"></input>
+            <select id="destinationdropdown" class="form-control dropdown" ng-model="destListSelect" ng-show="destList.length > 0">
               <option ng-repeat="dest in destList">{{dest}}</option>
             </select>
           </div>
