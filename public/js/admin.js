@@ -1,4 +1,4 @@
-var app = angular.module("adminApp", []);
+var app = angular.module("adminApp", ["ngFileSaver"]);
 app.controller("StatusController", function($scope){
     $scope.status = {
         text: "Welcome!",
@@ -54,18 +54,18 @@ app.factory("apiService", function($http, responder){
             }
             
             $http.get(req)
-                .then(function(data){
-                    callback(data);
-                })
-                .catch(function(err){
-                    handleError(err);
-                });
+            .then(function(data){
+                callback(data);
+            })
+            .catch(function(err){
+                handleError(err);
+            });
     };
     return { apiCall: apiCall,
              handleError: handleError};
 });
 
-app.controller("ExperimentDownloadController", function($scope, responder, apiService, $window){
+app.controller("ExperimentDownloadController", function($scope, responder, apiService, FileSaver, Blob){
     $scope.sourceURL = "";
     $scope.experimentName = "";
     $scope.destination = "";
@@ -83,31 +83,27 @@ app.controller("ExperimentDownloadController", function($scope, responder, apiSe
     
     $scope.checkExistence = function(){ 
         apiService.apiCall("users", $scope, function(data){
-            responder.respond("<strong>Experiment exists.</strong> There are " + (data.split("\n").length - 2) + " users in the database.", "success");
+            responder.respond("<strong>Experiment exists.</strong> There are " + (data.data.split("\n").length - 2) + " users in the database.", "success");
         });
     };
     $scope.getData = function(){
         apiService.apiCall("makecsv", $scope, function(data){
             responder.respond("<strong>Success!</strong> Data download should start right away.", "success");
-            var blob = new Blob([data], {type: "octet/stream"}),
-                url = $window.URL.createObjectURL(blob),
-                a = $window.document.createElement("a");
-            $window.document.body.appendChild(a);
-            a.style = "display: none";
-            a.href = url;
-            a.download = $scope.getDestination() || "xp.csv";
-            a.target = "_blank";
-            a.click();
-            $window.URL.revokeObjectURL(url);
+            var blob = new Blob([data.data], {type: "octet/stream"});
+            FileSaver.saveAs(blob, $scope.getDestination() || "xp.csv");
         });
     };
 
     $scope.findDestinations = function() {
         apiService.apiCall("destinations", $scope, function(data){
+            var dests;
             responder.respond("Destination dropdown box populated", "success");
-            var dests = JSON.parse(data);
+            if (typeof data.data === "string") {
+                dests = JSON.parse(data.data);
+            }
             $scope.destination = "";
-            $scope.destList = data;
+            $scope.destList = data.data;
+            $scope.destListSelect = $scope.destList[0];
         });
     };
 });
