@@ -10,7 +10,7 @@ var config =  {
     entry: "./app.js",
     output: {
         filename: "bundle.js",
-        path: dir("public/")
+        path: dir("public/dist/")
     },
     context: dir("public/js"),
     module: {

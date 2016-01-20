@@ -4,7 +4,7 @@ npm_debug.*
 doc/
 coverage/
 log
-
+public/dist/
 
 # Elastic Beanstalk Files
 .elasticbeanstalk/*
