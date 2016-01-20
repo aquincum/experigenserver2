@@ -2,6 +2,9 @@
 node_modules
 npm_debug.*
 doc/
+coverage/
+log
+
 
 # Elastic Beanstalk Files
 .elasticbeanstalk/*

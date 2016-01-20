@@ -1,28 +1,30 @@
-var app = angular.module("adminApp", ["ngFileSaver"]);
-app.controller("StatusController", function($scope){
-    $scope.status = {
-        text: "Welcome!",
-        alert: "info"
-    };
-    $scope.$on("statusUpdate",  function (event, s, alertstatus){
-        //        $scope.apply(function(){
-        $scope.status.text = s;
-        if(alertstatus) {
-            $scope.status.alert = alertstatus;
-        }
-//        });
-    });
-});
-app.factory("responder", function($rootScope){
-    return {
-        respond: function (s, c){
-            $rootScope.$broadcast("statusUpdate", s, c);
-        }
-    };
-});
+var crypto = require("crypto-js");
 
-app.factory("apiService", function($http, responder){
-    var handleError = function(err){
+module.exports = function(app){
+    app.controller("StatusController", function($scope){
+        $scope.status = {
+            text: "Welcome!",
+            alert: "info"
+        };
+        $scope.$on("statusUpdate",  function (event, s, alertstatus){
+            //        $scope.apply(function(){
+            $scope.status.text = s;
+            if(alertstatus) {
+                $scope.status.alert = alertstatus;
+            }
+            //        });
+        });
+    });
+    app.factory("responder", function($rootScope){
+        return {
+            respond: function (s, c){
+                $rootScope.$broadcast("statusUpdate", s, c);
+            }
+        };
+    });
+
+    app.factory("apiService", function($http, responder){
+        var handleError = function(err){
             switch(err.status){
             case 400:
                 responder.respond("Problem with the request. " + err.data, "danger");
@@ -42,8 +44,8 @@ app.factory("apiService", function($http, responder){
             default:
                 responder.respond("Odd error :O status code " + err.status + ", message: " + err.data, "danger");
             }
-    };
-    var apiCall = function (request, scope, callback){
+        };
+        var apiCall = function (request, scope, callback){
             var req = "/" + request + "?",
                 dest = scope.getDestination();
             responder.respond("");
@@ -54,106 +56,107 @@ app.factory("apiService", function($http, responder){
             }
             
             $http.get(req)
-            .then(function(data){
-                callback(data);
-            })
-            .catch(function(err){
-                handleError(err);
-            });
-    };
-    return { apiCall: apiCall,
-             handleError: handleError};
-});
+                .then(function(data){
+                    callback(data);
+                })
+                .catch(function(err){
+                    handleError(err);
+                });
+        };
+        return { apiCall: apiCall,
+                 handleError: handleError};
+    });
 
-app.controller("ExperimentDownloadController", function($scope, responder, apiService, FileSaver, Blob){
-    $scope.sourceURL = "";
-    $scope.experimentName = "";
-    $scope.destination = "";
-    $scope.destList = [];
-    $scope.destListSelect = "";
+    app.controller("ExperimentDownloadController", function($scope, responder, apiService, FileSaver, Blob){
+        $scope.sourceURL = "";
+        $scope.experimentName = "";
+        $scope.destination = "";
+        $scope.destList = [];
+        $scope.destListSelect = "";
 
-    $scope.getDestination = function(){
-        if($scope.destList.length > 0){
-            return $scope.destListSelect;
-        }
-        else {
-            return $scope.destination;
-        }
-    };
-    
-    $scope.checkExistence = function(){ 
-        apiService.apiCall("users", $scope, function(data){
-            responder.respond("<strong>Experiment exists.</strong> There are " + (data.data.split("\n").length - 2) + " users in the database.", "success");
-        });
-    };
-    $scope.getData = function(){
-        apiService.apiCall("makecsv", $scope, function(data){
-            responder.respond("<strong>Success!</strong> Data download should start right away.", "success");
-            var blob = new Blob([data.data], {type: "octet/stream"});
-            FileSaver.saveAs(blob, $scope.getDestination() || "xp.csv");
-        });
-    };
-
-    $scope.findDestinations = function() {
-        apiService.apiCall("destinations", $scope, function(data){
-            var dests;
-            responder.respond("Destination dropdown box populated", "success");
-            if (typeof data.data === "string") {
-                dests = JSON.parse(data.data);
+        $scope.getDestination = function(){
+            if($scope.destList.length > 0){
+                return $scope.destListSelect;
             }
-            $scope.destination = "";
-            $scope.destList = data.data;
-            $scope.destListSelect = $scope.destList[0];
-        });
-    };
-});
+            else {
+                return $scope.destination;
+            }
+        };
+        
+        $scope.checkExistence = function(){ 
+            apiService.apiCall("users", $scope, function(data){
+                responder.respond("<strong>Experiment exists.</strong> There are " + (data.data.split("\n").length - 2) + " users in the database.", "success");
+            });
+        };
+        $scope.getData = function(){
+            apiService.apiCall("makecsv", $scope, function(data){
+                responder.respond("<strong>Success!</strong> Data download should start right away.", "success");
+                var blob = new Blob([data.data], {type: "octet/stream"});
+                FileSaver.saveAs(blob, $scope.getDestination() || "xp.csv");
+            });
+        };
 
-app.controller("ExperimenterCtrl", function($scope, apiService){
-    var updateLogin = function(li){
-        $scope.$applyAsync(function(){
-            $scope.loggedIn = li;
-        });
-        if(li){
-            $scope.toplabel = $scope.experimenter;
-        }
-        else{
-            $scope.toplabel = "Not logged in";
-        }
-    };
-    $scope.experimenter = "";
-    //    $scope.toplabel = ;
-    $scope.password = "";
-    $scope.ha1 = "";
-    updateLogin(false);
-    $scope.updateHA1 = function(){
-        $scope.ha1 = CryptoJS.MD5($scope.experimenter + ":Experimenters:" + $scope.password).toString();
-    };
-    $scope.$watch("experimenter", $scope.updateHA1);
-    $scope.$watch("password", $scope.updateHA1);
-    $scope.register = function(){
-        var req = "/experimenter?experimenter=" + $scope.experimenter +
-            "&ha1="+$scope.ha1;
-        $.post(req).success(function(data){
-            respond($scope.experimenter + " registered!", "success");
-            updateLogin(true);
-        }).fail(function(err){
-            apiService.handleError(err);
-        });
-    };
-    $scope.login = function(){
-        $.ajaxDigest("/me", {
-            username: $scope.experimenter,
-            password: $scope.password
-        }).done(function(){
-            updateLogin(true);
-            respond("Logged in! Welcome " + $scope.experimenter, "success");
-        }).fail(function(){
-            respond("Login failure!", "danger");
-        });
-    };
-    $scope.logout = function(){
-        $scope.username = "";
+        $scope.findDestinations = function() {
+            apiService.apiCall("destinations", $scope, function(data){
+                var dests;
+                responder.respond("Destination dropdown box populated", "success");
+                if (typeof data.data === "string") {
+                    dests = JSON.parse(data.data);
+                }
+                $scope.destination = "";
+                $scope.destList = data.data;
+                $scope.destListSelect = $scope.destList[0];
+            });
+        };
+    });
+
+    app.controller("ExperimenterCtrl", function($scope, apiService){
+        var updateLogin = function(li){
+            $scope.$applyAsync(function(){
+                $scope.loggedIn = li;
+            });
+            if(li){
+                $scope.toplabel = $scope.experimenter;
+            }
+            else{
+                $scope.toplabel = "Not logged in";
+            }
+        };
+        $scope.experimenter = "";
+        //    $scope.toplabel = ;
         $scope.password = "";
+        $scope.ha1 = "";
         updateLogin(false);
-    };
-});
+        $scope.updateHA1 = function(){
+            $scope.ha1 = crypto.MD5($scope.experimenter + ":Experimenters:" + $scope.password).toString();
+        };
+        $scope.$watch("experimenter", $scope.updateHA1);
+        $scope.$watch("password", $scope.updateHA1);
+        $scope.register = function(){
+            var req = "/experimenter?experimenter=" + $scope.experimenter +
+                "&ha1="+$scope.ha1;
+            $.post(req).success(function(data){
+                respond($scope.experimenter + " registered!", "success");
+                updateLogin(true);
+            }).fail(function(err){
+                apiService.handleError(err);
+            });
+        };
+        $scope.login = function(){
+            $.ajaxDigest("/me", {
+                username: $scope.experimenter,
+                password: $scope.password
+            }).done(function(){
+                updateLogin(true);
+                respond("Logged in! Welcome " + $scope.experimenter, "success");
+            }).fail(function(){
+                respond("Login failure!", "danger");
+            });
+        };
+        $scope.logout = function(){
+            $scope.username = "";
+            $scope.password = "";
+            updateLogin(false);
+        };
+    });
+};
