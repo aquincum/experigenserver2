@@ -1,89 +1,90 @@
 {
-  "name": "experigenserver2",
-  "version": "2.0.0",
-  "description": "Experigen server rethought using MongoDB",
-  "main": ".#main.js",
-  "scripts": {
-    "postinstall": "webpack",
-    "build-client": "webpack",
-    "webpack": "webpack-dev-server",
-    "start": "node main.js",
-    "jsdoc": "node ./node_modules/jsdoc/jsdoc.js -r -R README.md -c jsdoc.conf.json -t ./node_modules/ink-docstrap/template -d doc main.js server/",
-      "test": "NODE_ENV=test ./node_modules/mocha/bin/mocha",
-      "karma": "NODE_ENV=test karma start",
-      "karma-single": "NODE_ENV=test karma start --single-run"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+ssh://git@github.com/aquincum/experigenserver2.git"
-  },
-  "keywords": [
-    "experiment",
-    "server"
-  ],
-  "author": "Daniel Szeredi",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/aquincum/experigenserver2/issues"
-  },
-  "homepage": "https://github.com/aquincum/experigenserver2#readme",
-  "dependencies": {
-    "angular": "^1.4.8",
-    "angular-file-saver": "^1.0.2",
-    "bootstrap": "^3.3.6",
-    "bower": "*",
-    "codecov": ">1.0.0",
-    "crypto-js": "^3.1.6",
-    "digest-ajax": "git+https://github.com/aquincum/digest-ajax.git",
-    "express": "*",
-    "express-session": "*",
-    "fnv-plus": "*",
-    "istanbul": ">0.3.2",
-    "jquery": "^2.2.0",
-    "mocha": "*",
-    "mongodb": ">=2.0",
-    "morgan": "^1.6.1",
-    "passport": "*",
-    "passport-anonymous": "*",
-    "passport-http": "*",
-    "yargs": "*"
-  },
-  "devDependencies": {
-    "angular-mocks": "^1.4.8",
-    "blanket": "^1.1.9",
-    "bootstrap-webpack": "0.0.5",
-    "coveralls": "^2.11.4",
-    "css-loader": "^0.23.1",
-    "exports-loader": "^0.6.2",
-    "extract-text-webpack-plugin": "^1.0.1",
-    "file-loader": "^0.8.5",
-    "imports-loader": "^0.6.5",
-    "ink-docstrap": "^1.1.0",
-    "jasmine-core": "^2.4.1",
-    "jsdoc": "^3.3.3",
-    "karma": "^0.13.19",
-    "karma-chrome-launcher": "^0.2.2",
-    "karma-jasmine": "^0.3.6",
-    "karma-phantomjs-launcher": "^0.2.3",
-    "karma-webpack": "^1.7.0",
-    "less": "^2.5.3",
-    "less-loader": "^2.2.2",
-    "mocha-lcov-reporter": "^1.0.0",
-    "style-loader": "^0.13.0",
-    "supertest": "^1.1.0",
-    "url-loader": "^0.5.7",
-    "webpack": "^1.12.11",
-    "webpack-dev-server": "^1.14.1"
-  },
-  "config": {
-    "blanket": {
-      "pattern": [
-        ""
-      ],
-      "data-cover-never": [
-        "node_modules",
-        "test"
-      ]
+    "name": "experigenserver2",
+    "version": "2.0.0",
+    "description": "Experigen server rethought using MongoDB",
+    "main": ".#main.js",
+    "scripts": {
+        "postinstall": "webpack",
+        "build-client": "webpack",
+        "webpack": "webpack-dev-server",
+        "start": "node main.js",
+        "jsdoc": "node ./node_modules/jsdoc/jsdoc.js -r -R README.md -c jsdoc.conf.json -t ./node_modules/ink-docstrap/template -d doc main.js server/",
+        "test-server": "NODE_ENV=test ./node_modules/mocha/bin/mocha",
+        "test": "NODE_ENV=test ./node_modules/mocha/bin/mocha && NODE_ENV=test karma start --single-run",
+        "karma": "NODE_ENV=test karma start",
+        "karma-single": "NODE_ENV=test karma start --single-run"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+ssh://git@github.com/aquincum/experigenserver2.git"
+    },
+    "keywords": [
+        "experiment",
+        "server"
+    ],
+    "author": "Daniel Szeredi",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/aquincum/experigenserver2/issues"
+    },
+    "homepage": "https://github.com/aquincum/experigenserver2#readme",
+    "dependencies": {
+        "angular": "^1.4.8",
+        "angular-file-saver": "^1.0.2",
+        "bootstrap": "^3.3.6",
+        "bower": "*",
+        "codecov": ">1.0.0",
+        "crypto-js": "^3.1.6",
+        "digest-ajax": "git+https://github.com/aquincum/digest-ajax.git",
+        "express": "*",
+        "express-session": "*",
+        "fnv-plus": "*",
+        "istanbul": ">0.3.2",
+        "jquery": "^2.2.0",
+        "mocha": "*",
+        "mongodb": ">=2.0",
+        "morgan": "^1.6.1",
+        "passport": "*",
+        "passport-anonymous": "*",
+        "passport-http": "*",
+        "yargs": "*"
+    },
+    "devDependencies": {
+        "angular-mocks": "^1.4.8",
+        "blanket": "^1.1.9",
+        "bootstrap-webpack": "0.0.5",
+        "coveralls": "^2.11.4",
+        "css-loader": "^0.23.1",
+        "exports-loader": "^0.6.2",
+        "extract-text-webpack-plugin": "^1.0.1",
+        "file-loader": "^0.8.5",
+        "imports-loader": "^0.6.5",
+        "ink-docstrap": "^1.1.0",
+        "jasmine-core": "^2.4.1",
+        "jsdoc": "^3.3.3",
+        "karma": "^0.13.19",
+        "karma-chrome-launcher": "^0.2.2",
+        "karma-jasmine": "^0.3.6",
+        "karma-phantomjs-launcher": "^0.2.3",
+        "karma-webpack": "^1.7.0",
+        "less": "^2.5.3",
+        "less-loader": "^2.2.2",
+        "mocha-lcov-reporter": "^1.0.0",
+        "style-loader": "^0.13.0",
+        "supertest": "^1.1.0",
+        "url-loader": "^0.5.7",
+        "webpack": "^1.12.11",
+        "webpack-dev-server": "^1.14.1"
+    },
+    "config": {
+        "blanket": {
+            "pattern": [
+                ""
+            ],
+            "data-cover-never": [
+                "node_modules",
+                "test"
+            ]
+        }
     }
-  }
 }
