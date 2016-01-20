@@ -276,14 +276,17 @@ describe("dbwrite", function(){
 	                assert.equal(doc.userCode, "Tester");
 	                assert.equal(doc.IP, "::ffff:127.0.0.1");
                         return true;
-                }),
-	        innerdb.collection(collname).remove({info: now.toString()})
+                    })
+            ]);
+        }).then(function(){
+	    return _db.then(function(innerdb){
+                return innerdb.collection(collname).remove({info: now.toString()})
                     .then(function(result){
 		        assert.equal(result.result.n, 1);
                         return true;
-		    })
-            ]);
-	});
+		    });
+            });
+        });
     });
 });
 
