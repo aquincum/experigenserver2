@@ -1,9 +1,14 @@
+require("./phantomJSpolyfill");
+var angular = require("angular");
+var angularMocks = require("angular-mocks");
+var inject = angular.mock.inject;
+require("../../public/js/app");
+
 
 describe("Angular", function(){
     it("Tools should exist", function(){
         expect(angular).toBeDefined();
         expect(inject).toBeDefined();
-        expect(module).toBeDefined();
     });
     it("The adminApp module should exist", function(){
         expect(angular.module("adminApp")).toBeDefined();
@@ -30,7 +35,7 @@ describe("apiService", function(){
                 this.getDestination();
         }
     };
-    beforeEach(module("adminApp"));
+    beforeEach(angular.mock.module("adminApp"));
     beforeEach(inject(function(_apiService_, _responder_,_$httpBackend_){
         apiService = _apiService_;
         responder = _responder_;
@@ -68,7 +73,7 @@ describe("apiService", function(){
 
 describe("statusController & responder", function(){
     var cCtrl, responder, $rootScope, scope;
-    beforeEach(module("adminApp"));
+    beforeEach(angular.mock.module("adminApp"));
     beforeEach(inject(function($controller, _responder_,_$rootScope_){
         responder = _responder_;
         $rootScope = _$rootScope_;
@@ -100,9 +105,10 @@ describe("statusController & responder", function(){
 
 });
 
+
 describe("ExperimentDownloadController", function(){
     var cCtrl, responder, scope, $httpBackend, $window, FileSaver;
-    beforeEach(module("adminApp"));
+    beforeEach(angular.mock.module("adminApp"));
     beforeEach(inject(function($controller, _$httpBackend_,_$rootScope_, _responder_, _FileSaver_){
         responder = _responder_;
         $httpBackend = _$httpBackend_;
@@ -153,8 +159,8 @@ describe("ExperimentDownloadController", function(){
     });
 
     it("Should make a correct download", function(done){
-        /* OK This wouldn't work on a browser without window.URL
-         * Like PhantomJS. Do I want to have another way of downloading? */
+    // OK This wouldn't work on a browser without window.URL
+    // Like PhantomJS. Do I want to have another way of downloading?
         var ctrl = cCtrl();
         var url = "/makecsv?sourceurl=alma&experimentName=korte",
             resp = "this\tis\ta\theader\tuserCode\n1\t2\t3\t4\tUSX143\n";
@@ -196,7 +202,6 @@ describe("ExperimentDownloadController", function(){
     });
     
 });
-
 
 
 

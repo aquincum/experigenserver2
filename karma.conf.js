@@ -1,3 +1,11 @@
+var path = require('path');
+var webpackConfig = require('./webpack.config');
+
+var entry = path.resolve(webpackConfig.context, webpackConfig.entry);
+var preprocessors = {};
+preprocessors[entry] = ['webpack', 'coverage'];
+
+
 // Karma configuration
 // Generated on Sat Jan 16 2016 21:33:25 GMT-0500 (EST)
 
@@ -12,27 +20,16 @@ module.exports = function(config) {
         // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
         frameworks: ['jasmine'],
         
-
+	preprocessors: preprocessors,
+	webpack: webpackConfig,
+        
         // list of files / patterns to load in the browser
-        files: [
-            'public/lib/angular/angular.js',
-            'public/lib/angular-file-saver/dist/angular-file-saver.bundle.js',
-            'public/lib/angular-mocks/angular-mocks.js',
-            'public/js/**/*.js',
-            'test/client-side/**/*.js'
-        ],
+        files: [entry],
 
 
         // list of files to exclude
         exclude: [
         ],
-
-
-        // preprocess matching files before serving them to the browser
-        // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
-        preprocessors: {
-            'public/js/**/*.js': ['coverage']
-        },
 
 
         // test results reporter to use
@@ -68,13 +65,21 @@ module.exports = function(config) {
         // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
         browsers: ['PhantomJS', 'Chrome'],
 
-
+        
+        
         // Continuous Integration mode
         // if true, Karma captures browsers, runs the tests and exits
         singleRun: false,
 
         // Concurrency level
         // how many browser should be started simultaneous
-        concurrency: Infinity
+        concurrency: Infinity,
+        plugins: [
+	    require('karma-webpack'),
+	    'karma-jasmine',
+	    'karma-chrome-launcher',
+            'karma-phantomjs-launcher',
+	    'karma-coverage'
+	]
     })
 }

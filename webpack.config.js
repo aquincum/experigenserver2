@@ -26,5 +26,10 @@ var config =  {
 };
 
 
+if (process.env.NODE_ENV === 'test') {
+	config.entry = './test.js';
+	config.context = dir('test/client-side/');
+}
+
 
 module.exports = config;
