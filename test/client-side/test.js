@@ -3,6 +3,8 @@ var angular = require("angular");
 var angularMocks = require("angular-mocks");
 var angularFS = require("angular-file-saver");
 var inject = angular.mock.inject;
+var jQuery = require("jquery");
+window.jQuery = jQuery;
 require("../../public/js/modules/adminApp");
 
 require("./test-angular");

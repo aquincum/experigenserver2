@@ -5,12 +5,13 @@ var inject = angular.mock.inject;
 
 
 describe("statusController & responder", function(){
-    var cCtrl, responder, $rootScope, scope;
+    var cCtrl, responder, $rootScope, scope, $timeout;
     beforeEach(angular.mock.module("adminApp"));
-    beforeEach(inject(function($controller, _responder_,_$rootScope_){
+    beforeEach(inject(function($controller, _responder_,_$rootScope_,_$timeout_){
         responder = _responder_;
         $rootScope = _$rootScope_;
         scope = $rootScope.$new();
+        $timeout = _$timeout_;
         cCtrl = function(){
             return $controller("StatusController", {
                 "$scope": scope
@@ -23,17 +24,31 @@ describe("statusController & responder", function(){
         var ctlr = cCtrl();
         expect(scope.status.text).toEqual("Welcome!");
     });
-    it("Should respond to broadcast", function(){
+    it("Should respond to broadcast", function(done){
         var ctlr = cCtrl();
-        $rootScope.$broadcast("statusUpdate", "Testing", "it");
-        expect(scope.status.text).toEqual("Testing");
-        expect(scope.status.alert).toEqual("it");
+        $timeout(function(){
+            $rootScope.$broadcast("statusUpdate", "Testing", "it");
+            $timeout(function(){
+                expect(scope.status.text).toEqual("Testing");
+                expect(scope.status.alert).toEqual("it");
+                done();
+            }, 1);
+            $timeout.flush();
+        }, 0);
+        $timeout.flush();
     });
-    it("Should respond to responder", function(){
+    it("Should respond to responder", function(done){
         var ctlr = cCtrl();
-        responder.respond("Testing", "it");
-        expect(scope.status.text).toEqual("Testing");
-        expect(scope.status.alert).toEqual("it");
+        $timeout(function(){
+            responder.respond("Testing", "it");
+            $timeout(function(){
+                expect(scope.status.text).toEqual("Testing");
+                expect(scope.status.alert).toEqual("it");
+                done();
+            },1);
+            $timeout.flush();
+        },0);
+        $timeout.flush();
     });
 
 });
