@@ -1,8 +1,9 @@
 var crypto = require("crypto-js");
 
 module.exports = function(app){
-    app.controller("ExperimenterController", function($scope, apiService){
-        var updateLogin = function(li){
+    app.controller("ExperimenterController", function($scope, apiService, authService,responder, $http){
+        var updateLogin = function(){
+            var li = authService.getLoggedIn();
             $scope.$applyAsync(function(){
                 $scope.loggedIn = li;
             });
@@ -16,38 +17,40 @@ module.exports = function(app){
         $scope.experimenter = "";
         //    $scope.toplabel = ;
         $scope.password = "";
-        $scope.ha1 = "";
+
         updateLogin(false);
+        $scope.$on("updateLogin", function(event, loggedin){
+            updateLogin();
+        });
         $scope.updateHA1 = function(){
             $scope.ha1 = crypto.MD5($scope.experimenter + ":Experimenters:" + $scope.password).toString();
         };
-        $scope.$watch("experimenter", $scope.updateHA1);
-        $scope.$watch("password", $scope.updateHA1);
         $scope.register = function(){
             var req = "/experimenter?experimenter=" + $scope.experimenter +
-                "&ha1="+$scope.ha1;
-            $.post(req).success(function(data){
-                respond($scope.experimenter + " registered!", "success");
-                updateLogin(true);
-            }).fail(function(err){
+                "&ha1="+(crypto.MD5($scope.experimenter + ":Experimenters:" + $scope.password).toString());
+            $http.post(req).then(function(data){
+                responder.respond($scope.experimenter + " registered!", "success");
+                $scope.login();
+            }).catch(function(err){
                 apiService.handleError(err);
             });
         };
         $scope.login = function(){
-            $.ajaxDigest("/me", {
-                username: $scope.experimenter,
-                password: $scope.password
-            }).done(function(){
-                updateLogin(true);
-                respond("Logged in! Welcome " + $scope.experimenter, "success");
-            }).fail(function(){
-                respond("Login failure!", "danger");
+            authService.setExperimenter($scope.experimenter);
+            authService.setPassword($scope.password);
+            authService.login(function(loggedin){
+                if(loggedin){
+                    responder.respond("Logged in! Welcome " + $scope.experimenter, "success");
+                }
+                else{
+                    responder.respond("Login failure!", "danger");
+                }
             });
         };
         $scope.logout = function(){
             $scope.username = "";
             $scope.password = "";
-            updateLogin(false);
+            authService.logout();
         };
     });
-}
+};

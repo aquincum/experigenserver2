@@ -9,6 +9,7 @@ require("./test-angular");
 require("./test-apiService");
 require("./test-status");
 require("./test-ExperimentDownloadController");
+require("./test-ExperimenterController");
 
 
 

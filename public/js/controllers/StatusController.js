@@ -5,12 +5,12 @@ module.exports = function(app){
             alert: "info"
         };
         $scope.$on("statusUpdate",  function (event, s, alertstatus){
-            //        $scope.apply(function(){
-            $scope.status.text = s;
-            if(alertstatus) {
-                $scope.status.alert = alertstatus;
-            }
-            //        });
+            $scope.$apply(function(){
+                $scope.status.text = s;
+                if(alertstatus) {
+                    $scope.status.alert = alertstatus;
+                }
+            });
         });
     });
 };
