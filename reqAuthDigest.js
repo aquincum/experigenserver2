@@ -13,7 +13,7 @@ var md5 = function md5(str, encoding){
 };
 
 // from passport-http
-var nonce = function nonce(len) {
+var nonce = module.exports.nonce = function nonce(len) {
     var buf = [],
         chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789',
         charlen = chars.length;
@@ -31,12 +31,16 @@ module.exports.HA1 = function HA1(username, password){
 
 
 module.exports.reqAuthDigest = function reqAuthDigest(uri, username, password, method, headers){
-    var newheader = "";
-    var auths = headers["www-authenticate"].split(" ");
+    var newheader = "", auths;
+    if(typeof headers == "function"){
+        auths = headers("www-authenticate").split(" ");
+    }
+    else {
+        auths = headers["www-authenticate"].split(" ");
+    }
     assert.equal(auths[0], "Digest");
     auths = auths.splice(1).join("").split(",");
     var authresp = {};
-    console.log(authresp);
     for(var i = 0; i < auths.length; i++){
         var m = auths[i].match(/(.*)="(.*)"/);
         authresp[m[1]] = m[2];
