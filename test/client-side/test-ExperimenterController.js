@@ -33,7 +33,7 @@ describe("authService", function(){
     }));
 
     it("Should start logged out", function(){
-        expect(authService.getLoggedIn()).toEqual(false);
+        expect(authService.isLoggedIn()).toEqual(false);
     });
 
     it("ajaxDigest should work", function(done){
@@ -55,7 +55,7 @@ describe("authService", function(){
         authService.setPassword("korte");
         authService.login(function(li){
             expect(li).toEqual(true);
-            expect(authService.getLoggedIn()).toEqual(true);
+            expect(authService.isLoggedIn()).toEqual(true);
             done();
         });
         $httpBackend.flush();
@@ -69,7 +69,7 @@ describe("authService", function(){
         authService.setPassword("k0rte");
         authService.login(function(li){
             expect(li).toEqual(false);
-            expect(authService.getLoggedIn()).toEqual(false);
+            expect(authService.isLoggedIn()).toEqual(false);
             done();
         });
         $httpBackend.flush();
@@ -80,7 +80,7 @@ describe("authService", function(){
         authService.setPassword("korte");
         authService.login(function(li){
             authService.logout();
-            expect(authService.getLoggedIn()).toEqual(false);
+            expect(authService.isLoggedIn()).toEqual(false);
             done();
         });
         $httpBackend.flush();
@@ -150,7 +150,7 @@ describe("ExperimenterController", function(){
         expect(responder.respond).toHaveBeenCalledWith("Logged in! Welcome alma", "success");
         scope.logout();
         $timeout(function(){
-            expect(authService.getLoggedIn(), false);
+            expect(authService.isLoggedIn(), false);
             done();
         }, 1);
         $timeout.flush();

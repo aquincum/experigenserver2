@@ -3,7 +3,7 @@ var crypto = require("crypto-js");
 module.exports = function(app){
     app.controller("ExperimenterController", function($scope, apiService, authService,responder, $http){
         var updateLogin = function(){
-            var li = authService.getLoggedIn();
+            var li = authService.isLoggedIn();
             $scope.$apply(function(){
                 $scope.loggedIn = li;
                 if(li){

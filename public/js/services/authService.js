@@ -12,7 +12,7 @@ module.exports = function(app){
             $timeout($rootScope.$broadcast.bind($rootScope, "updateLogin"), 0);
         };
 
-        service.getLoggedIn = function(){
+        service.isLoggedIn = function(){
             return loggedIn;
         };
 

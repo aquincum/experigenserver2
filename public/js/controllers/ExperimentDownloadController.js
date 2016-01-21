@@ -16,12 +16,12 @@ module.exports = function(app){
         };
         
         $scope.checkExistence = function(){ 
-            apiService.apiCall("users", $scope, function(data){
+            apiService.apiCall("users", $scope).then(function(data){
                 responder.respond("<strong>Experiment exists.</strong> There are " + (data.data.split("\n").length - 2) + " users in the database.", "success");
             });
         };
         $scope.getData = function(){
-            apiService.apiCall("makecsv", $scope, function(data){
+            apiService.apiCall("makecsv", $scope).then(function(data){
                 responder.respond("<strong>Success!</strong> Data download should start right away.", "success");
                 var blob = new Blob([data.data], {type: "octet/stream"});
                 FileSaver.saveAs(blob, $scope.getDestination() || "xp.csv");
@@ -29,7 +29,7 @@ module.exports = function(app){
         };
 
         $scope.findDestinations = function() {
-            apiService.apiCall("destinations", $scope, function(data){
+            apiService.apiCall("destinations", $scope).then(function(data){
                 var dests;
                 responder.respond("Destination dropdown box populated", "success");
                 if (typeof data.data === "string") {

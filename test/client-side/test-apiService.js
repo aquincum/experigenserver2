@@ -35,7 +35,7 @@ describe("apiService", function(){
     it("Should ask for some proper API calls", function(done){
         $httpBackend.whenGET(mockScope.url())
             .respond("!");
-        apiService.apiCall("users", mockScope, function(d){
+        apiService.apiCall("users", mockScope).then(function(d){
             expect(d.data).toEqual("!");
             done();
         });

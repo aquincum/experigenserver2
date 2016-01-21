@@ -1,5 +1,5 @@
 module.exports = function(app){
-    app.factory("apiService", function($http, responder){
+    app.factory("apiService", function($http, responder, authService){
         var handleError = function(err){
             switch(err.status){
             case 400:
@@ -21,7 +21,11 @@ module.exports = function(app){
                 responder.respond("Odd error :O status code " + err.status + ", message: " + err.data, "danger");
             }
         };
-        var apiCall = function (request, scope, callback){
+        var apiCall = function (request, scope){
+            var li = authService.isLoggedIn();
+            if(li){
+                request = "auth/" + request;
+            }
             var req = "/" + request + "?",
                 dest = scope.getDestination();
             responder.respond("");
@@ -30,14 +34,18 @@ module.exports = function(app){
             if(dest !== ""){
                 req += "&file=" + dest;
             }
-            
-            $http.get(req)
-                .then(function(data){
-                    callback(data);
-                })
-                .catch(function(err){
-                    handleError(err);
-                });
+
+            var getPromise;
+            if(li){
+                getPromise = authService.ajaxDigest(req, "get");
+            }
+            else{
+                getPromise = $http.get(req);
+            }
+            return getPromise.catch(function(err){
+                        handleError(err);
+                    });
+
         };
         return { apiCall: apiCall,
                  handleError: handleError};
