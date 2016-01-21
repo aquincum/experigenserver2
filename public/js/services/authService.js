@@ -23,14 +23,14 @@ module.exports = function(app){
             password = x;
         };
 
-        service.login = function(cb){
-            service.ajaxDigest("/auth/me", "GET")
+        service.login = function(){
+            return service.ajaxDigest("/auth/me", "GET")
                 .then(function(){
                     setLoggedIn(true);
-                    cb(true);
+                    return true;
                 }).catch(function(){
                     setLoggedIn(false);
-                    cb(false);
+                    return false;
                 });
         };
 

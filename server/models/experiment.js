@@ -121,7 +121,7 @@ Experiment.prototype.getDestinations = function(){
 
 /**
  * Returns a map of usercode/number combination, as summarized from the
- * database. The return to the callback is an object array.
+ * database. The return is a promise with an object array.
  * @returns {Promise<Object[]>} Promise with an array of users.
  * Each object having a `userCode` and a `records`
  * field. Rejects with {@link module:server/models/experiment~Experiment.NOSUCHEXPERIMENT}
@@ -167,18 +167,17 @@ Experiment.prototype.removeExperiment = function(){
 /**
  * This function gets all of the data from the experiment denoted by
  * the source URL and the experiment name and returns it to the 
- * callback. This will be used initially in makecsv, but later on we
+ * promise. This will be used initially in makecsv, but later on we
  * should switch to a more stream-based way of working.
  * @param {string} [destination="default.csv"] The destination CSV the data was sent.
  * Conforming to the old CSV style, "default.csv" is the default, so
  * data for which no destination was specified goes there.
- * @param {Promise<Object[]>} cb The results. It should return an error
+ * @param {Promise<Object[]>} The results. It should return an error
  *  if no such experiment is there in the db.
  */
 Experiment.prototype.getAllData = function(destination){
     var that = this;
-    if(typeof destination == "function" && !cb){
-        cb = destination;
+    if(!destination){
         destination = "default.csv";
     }
     if(destination == "default.csv"){
@@ -236,8 +235,8 @@ Experiment.prototype.write = function(query, errcnt){
 };
 
 /**
- * Returns the numeric userFileName for the given subject/session to
- * the callback. It checks out whether the collection exists at all,
+ * Returns the numeric userFileName for the given subject/session in
+ * a promise. It checks out whether the collection exists at all,
  * and returns 1 if it does not, or returns the lowest UFN otherwise.
  * If runs into an error, returns 0.
  * @returns {Promise<Number>} A promise with the UFN.

@@ -14,13 +14,13 @@ var util = require("./util");
  * Returns the database object to play with if necessary.
  * @returns {Promise<database>}
  */
-module.exports.getDB = function(cb){
+module.exports.getDB = function(){
     return MongoClient.connect(url);
 };
 
-/** Closes the database. I don't think it needs a callback,
- * it really just closes the DB at the next available moment.
- * Since promisification, it does return the Promise though.
+/** Closes the database.it really just closes the DB at the next available moment.
+ * Since promisification, it does return the Promise.
+ * @retruns {Promise}
  */
 module.exports.closeDB = function(){
     return MongoClient.connect(url, {}).then(function(db){

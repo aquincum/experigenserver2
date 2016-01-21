@@ -39,7 +39,7 @@ module.exports = function(app){
         $scope.login = function(){
             authService.setExperimenter($scope.experimenter);
             authService.setPassword($scope.password);
-            authService.login(function(loggedin){
+            authService.login().then(function(loggedin){
                 if(loggedin){
                     responder.respond("Logged in! Welcome " + $scope.experimenter, "success");
                 }

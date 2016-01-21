@@ -53,7 +53,7 @@ describe("authService", function(){
         expectAuthedRequest($httpBackend, "/auth/me", "GET", "alma");
         authService.setExperimenter("alma");
         authService.setPassword("korte");
-        authService.login(function(li){
+        authService.login().then(function(li){
             expect(li).toEqual(true);
             expect(authService.isLoggedIn()).toEqual(true);
             done();
@@ -67,7 +67,7 @@ describe("authService", function(){
         });
         authService.setExperimenter("alma");
         authService.setPassword("k0rte");
-        authService.login(function(li){
+        authService.login().then(function(li){
             expect(li).toEqual(false);
             expect(authService.isLoggedIn()).toEqual(false);
             done();
@@ -78,7 +78,7 @@ describe("authService", function(){
         expectAuthedRequest($httpBackend, "/auth/me", "GET", "alma");
         authService.setExperimenter("alma");
         authService.setPassword("korte");
-        authService.login(function(li){
+        authService.login().then(function(li){
             authService.logout();
             expect(authService.isLoggedIn()).toEqual(false);
             done();
@@ -106,7 +106,9 @@ describe("ExperimenterController", function(){
             });
         };
         spyOn(responder, "respond");
-        spyOn(authService, "login");
+        spyOn(authService, "login").and.callFake(function(){
+            return {then: function(f) { f(true); } };
+        });
     }));
 
     it("Should start as logged out", function(){
@@ -126,7 +128,6 @@ describe("ExperimenterController", function(){
         $httpBackend.flush();
         expect(responder.respond).toHaveBeenCalledWith("alma registered!", "success");
         expect(authService.login).toHaveBeenCalled();
-        authService.login.calls.mostRecent().args[0](true);
         expect(responder.respond).toHaveBeenCalledWith("Logged in! Welcome alma", "success");
     });
     it("Should handle failure", function(){
@@ -146,7 +147,6 @@ describe("ExperimenterController", function(){
         scope.password = "korte";
         scope.login();
         expect(authService.login).toHaveBeenCalled();
-        authService.login.calls.mostRecent().args[0](true);
         expect(responder.respond).toHaveBeenCalledWith("Logged in! Welcome alma", "success");
         scope.logout();
         $timeout(function(){
