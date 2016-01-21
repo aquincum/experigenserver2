@@ -1,5 +1,3 @@
-var $ = require("jquery");
-require("digest-ajax");
 var reqAuthDigest = require("../../../reqAuthDigest");
 
 module.exports = function(app){
@@ -26,16 +24,14 @@ module.exports = function(app){
         };
 
         service.login = function(cb){
-            jQuery.ajaxDigest("/auth/me", {
-                username: experimenter,
-                password: password
-            }).done(function(){
-                setLoggedIn(true);
-                cb(true);
-            }).fail(function(){
-                setLoggedIn(false);
-                cb(false);
-            });
+            service.ajaxDigest("/auth/me", "GET")
+                .then(function(){
+                    setLoggedIn(true);
+                    cb(true);
+                }).catch(function(){
+                    setLoggedIn(false);
+                    cb(false);
+                });
         };
 
         service.logout = function(){

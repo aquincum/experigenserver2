@@ -5,6 +5,24 @@ var inject = angular.mock.inject;
 var crypto = require("crypto-js");
 var reqAuthDigest = require("../../reqAuthDigest");
 
+
+var expectAuthedRequest = function($httpBackend, url, method, response){
+    if(typeof response == "string") {
+        response = {
+            data: response,
+            status: 200
+        };
+    }
+    $httpBackend.expect(method, url).respond(function(){
+        $httpBackend.resetExpectations();
+        $httpBackend.expect(method, url).respond(response.status, response.data);
+        return[401, null, {
+            "www-authenticate": 'Digest realm="Experimenters",nonce="'+
+                reqAuthDigest.nonce(32)+'",uri="'+url+'",qop="auth"'
+        }];
+    });
+};
+
 describe("authService", function(){
     var $rootScope, scope, $httpBackend, authService;
     beforeEach(angular.mock.module("adminApp"));
@@ -19,14 +37,7 @@ describe("authService", function(){
     });
 
     it("ajaxDigest should work", function(done){
-        $httpBackend.expectGET("/auth/teszt").respond(function(){
-            $httpBackend.resetExpectations();
-            $httpBackend.expectGET("/auth/teszt").respond(200, "jej");
-            return[401, null, {
-                "www-authenticate": 'Digest realm="Experimenters",nonce="'+
-                    reqAuthDigest.nonce(32)+'",uri="/auth/teszt",qop="auth"'
-            }];
-        });
+        expectAuthedRequest($httpBackend, "/auth/teszt", "GET", "jej");
         authService.setExperimenter("alma");
         authService.setPassword("korte");
         authService.ajaxDigest("/auth/teszt", "get").then(function(resp){
@@ -38,11 +49,8 @@ describe("authService", function(){
         $httpBackend.flush();
     });
 
-    xit("Should send a correct login", function (done){
-            $httpBackend.whenGET("/auth/me").respond(401, null, {
-            "www-authenticate": "Digest realm=Experimenters,nonce="+
-                reqAuthDigest.nonce(32)+",uri=/auth/me,qop=auth"
-        });
+    it("Should send a correct login", function (done){
+        expectAuthedRequest($httpBackend, "/auth/me", "GET", "alma");
         authService.setExperimenter("alma");
         authService.setPassword("korte");
         authService.login(function(li){
@@ -50,6 +58,32 @@ describe("authService", function(){
             expect(authService.getLoggedIn()).toEqual(true);
             done();
         });
+        $httpBackend.flush();
+    });
+    it("Should send an incorrect login and react as such", function (done){
+        expectAuthedRequest($httpBackend, "/auth/me", "GET", {
+            status: 401,
+            data: "none"
+        });
+        authService.setExperimenter("alma");
+        authService.setPassword("k0rte");
+        authService.login(function(li){
+            expect(li).toEqual(false);
+            expect(authService.getLoggedIn()).toEqual(false);
+            done();
+        });
+        $httpBackend.flush();
+    });
+    it("Should send a correct logout", function (done){
+        expectAuthedRequest($httpBackend, "/auth/me", "GET", "alma");
+        authService.setExperimenter("alma");
+        authService.setPassword("korte");
+        authService.login(function(li){
+            authService.logout();
+            expect(authService.getLoggedIn()).toEqual(false);
+            done();
+        });
+        $httpBackend.flush();
     });
 });
 
