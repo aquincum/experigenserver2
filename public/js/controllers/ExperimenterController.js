@@ -4,19 +4,20 @@ module.exports = function(app){
     app.controller("ExperimenterController", function($scope, apiService, authService,responder, $http){
         var updateLogin = function(){
             var li = authService.getLoggedIn();
-            $scope.$applyAsync(function(){
+            $scope.$apply(function(){
                 $scope.loggedIn = li;
+                if(li){
+                    $scope.toplabel = $scope.experimenter;
+                }
+                else{
+                    $scope.toplabel = "Not logged in";
+                }
             });
-            if(li){
-                $scope.toplabel = $scope.experimenter;
-            }
-            else{
-                $scope.toplabel = "Not logged in";
-            }
         };
         $scope.experimenter = "";
         //    $scope.toplabel = ;
         $scope.password = "";
+        $scope.loggedIn = false;
 
         updateLogin(false);
         $scope.$on("updateLogin", function(event, loggedin){
