@@ -42,7 +42,7 @@ var writeObjectsToClient = function(err, data, res){
  */
 var makeCSV = function(req, res){
     function fail(){
-        res.end("false\n"); // this is how the cgi died
+        res.status(400).end("false\n"); // this is how the cgi died
     }
     if (!req.query) return fail();
     var experimentName = req.query.experimentName,
@@ -69,7 +69,7 @@ var makeCSV = function(req, res){
  */
 var getUsers = function(req, res){
     function fail(){
-        res.end("false\n"); // this is how the cgi died
+        res.status(400).end("false\n"); // this is how the cgi died
     }
     if (!req.query) return fail();
     var experimentName = req.query.experimentName,
