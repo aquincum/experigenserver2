@@ -236,15 +236,15 @@ describe("dbwrite", function(){
 	}
         request(server)
             .get("/dbwrite")
-            .expect(200)
+            .expect(400)
             .expect('("false")', doneifdone);
         request(server)
             .get("/dbwrite?userCode=JANI&userFileName=5&sourceurl=no.where")
-            .expect(200)
+            .expect(400)
             .expect('("false")', doneifdone);
         request(server)
             .get("/dbwrite?experimentName=xxx")
-            .expect(200)
+            .expect(400)
             .expect('("false")', doneifdone);
     });
     var now = (new Date()).getTime();

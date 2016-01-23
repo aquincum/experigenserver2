@@ -10,10 +10,13 @@ var Experiment = require("../models/experiment");
  * Experigen server 1 did it too.
  */
 var dbWrite = function(req, res){
-    function fail(){
-        res.end("(\"false\")"); // this is how the cgi died
+    function fail(stat){
+        if(!stat){
+            stat = 500;
+        }
+        res.status(stat).end("(\"false\")"); // this is how the cgi died
     }
-    if (!req.query) return fail();
+    if (!req.query) return fail(400);
     // necessary fields
     var ufn = req.query.userFileName,
         userCode = req.query.userCode,
@@ -30,7 +33,7 @@ var dbWrite = function(req, res){
     // let's pass on everything now to the db, I'll clean up there.
     experiment.write(query).then(function (success){
         if(success){
-            res.end("(\"true\")");
+            res.status(200).end("(\"true\")");
         }
         else {
             fail();
