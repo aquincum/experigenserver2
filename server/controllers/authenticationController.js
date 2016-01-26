@@ -7,10 +7,10 @@ var Registration = require("../models/registration");
 
 module.exports.me = function(req,res){
     if(req.user){
-        res.end(req.user.username);
+        res.status(200).end(req.user.username);
     }
     else{
-        res.end("none");
+        res.status(404).end("none");
     }
 };
 
