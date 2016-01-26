@@ -10,7 +10,7 @@ var Experiment = require("../models/experiment");
  */
 var getDestinations = function(req, res){
     function fail(){
-        res.end("false\n"); // this is how the cgi died
+        res.status(400).end("false\n"); // this is how the cgi died
     }
     if (!req.query) return fail();
     var experimentName = req.query.experimentName,
