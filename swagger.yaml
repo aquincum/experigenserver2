@@ -1,0 +1,783 @@
+# Example YAML to get you started quickly.
+# Be aware that YAML has indentation based scoping.
+# Code completion support is available so start typing for available options.
+swagger: '2.0'
+
+schemes: 
+  - http
+# This is your document metadata
+info:
+  version: "2.0.0"
+  title: Experigen server 2 API
+
+securityDefinitions:
+  digestAuth:
+    type: basic
+    description: | 
+      A HTML Digest authentication. **Not basic**. Swagger unfortunately
+      can't into Digest. Maybe should also switch to OAuth.
+
+parameters:
+  sourceurl:
+    name: sourceurl
+    in: query
+    description: The URL of the experiment. Needed for identification.
+    required: true
+    type: string
+  experimentName:
+    name: experimentName
+    in: query
+    description: |
+      The experiment name given in the `settings.js` file for the
+      experiment
+    required: true
+    type: string
+  experimenter:
+    name: experimenter
+    in: query
+    description: |
+      The name of the experimenter.
+    required: true
+    type: string
+  ha1:
+    name: ha1
+    in: query
+    description: |
+      The HA1 hash generated from the experimenter username, the digest
+      realm, and the password. This is passed around, so that the password
+      itself is not exposed on the internet!
+    required: true
+    type: string
+    
+# Describe your paths here
+paths:
+  # This is a path endpoint. Change it.
+  /version:
+    # This is a HTTP operation
+    get:
+      # Describe this verb here. Note: you can use markdown
+      description: |
+        Simply returns the actual version of the `Experigen` server.
+      tags: 
+        - misc
+      produces:
+        - text/plain
+      # This is array of GET operation parameters:
+      #parameters:
+        # An example parameter that is in query and is required
+      #  -
+      #    name: size
+      #    in: query
+      #    description: Size of array
+      #    required: true
+      #    type: number
+      #    format: double
+      # Expected responses for this operation:
+      responses:
+        # Response code
+        200:
+          description: Successful response
+          # A schema describing your response object.
+          # Use JSON Schema format
+          schema:
+            type: string
+          examples:
+            text/plain:
+              "2.0.0"
+  /getuserid:
+    get:
+      description: |
+        Responds with the lowest free user ID in the experiment. This
+        is stored in `Experigen` as the `userFileName`, and is a tool
+        to keep each `userCode` unique. Returns this number enclosed in
+        double quotes and outside brackets, so that it is compatible
+        with the 1.0 server and the clients out there.
+      tags:
+        - development
+        - "1.0"
+      produces:
+        - text/plain
+      consumes:
+        - application/x-www-form-urlencoded
+      parameters:
+        - $ref: "#/parameters/sourceurl"
+        - $ref: "#/parameters/experimentName"
+      responses:
+        200:
+          description: Success. Beware of weird response format.
+          schema:
+            type: string
+          examples:
+            text/plain:
+              ("3")
+        400:
+          description: Wrong request. Both the source URL and the experiment name are needed.
+        500:
+          description: Server error. Returns -1 as `userFileName`
+          schema:
+            type: string
+          examples:
+            text/plain:
+              ("-1")
+  /dbwrite:
+    get:
+      description: |
+        The Experigen client records data using this service. It should
+        be a POST request but oh well. Again, responds in a weird way,
+        to be consistend with the 1.0 server. The number of query parameters
+        is unlimited: each uploaded variable is attached to the query as
+        a `key=value` pair.
+      tags:
+        - development
+        - "1.0"
+      produces:
+        - text/plain
+      consumes:
+        - application/x-www-form-urlencoded
+      parameters:
+        - $ref: "#/parameters/sourceurl"
+        - $ref: "#/parameters/experimentName"
+        - name: userCode
+          in: query
+          type: string
+          description: The unique userCode of the subject
+          required: true
+          type: string
+        - name: userFileName
+          in: query
+          type: number
+          description: The userFileName of the subject
+          required: true
+        - name: ... (multiple)
+          in: query
+          type: string
+          description: |
+            All data to be uploaded is written in the query in a key=value
+            fashion.
+          required: false
+      responses:
+        200:
+          description: Writing operation successful.
+          schema:
+            type: string
+          examples:
+            text/plain:
+              ("true")
+        400:
+          description: Wrong query
+          schema:
+            type: string
+          examples:
+            text/plain:
+              ("false")
+        500:
+          description: Server error
+          schema:
+            type: string
+          examples:
+            text/plain:
+              ("false")
+  /makecsv:
+    get:
+      description: |
+        Creation of a **Tab Separated Values** file of the results of an
+        experiment, in the format we're used to since version 1.0. It is 
+        indeed a TSV, **not** a CSV. This request will only work for 
+        unregistered experiments, for registered ones, use `/auth/makecsv`
+      tags:
+        - "1.0"
+        - results
+        - no-access-control
+      produces:
+        - text/tsv
+      consumes:
+        - application/x-www-form-urlencoded
+      parameters:
+        - $ref: "#/parameters/sourceurl"
+        - $ref: "#/parameters/experimentName"
+        - name: file
+          type: string
+          in: query
+          required: false
+          default: default.csv
+          description: |
+            An optional parameter: if present, will return only files that
+            have been tagged with the given `destination` parameter. If empty,
+            the response will be based on untagged responses, which are
+            collected to `default.csv`. 
+      responses:
+        200:
+          description: Returns the result TSV.
+          schema:
+            type: file
+        400:
+          description: |
+            Wrong request, both source URL and experiment name
+            needed.
+          schema:
+            type: string
+          examples:
+            text/plain:
+              "false"
+        403:
+          description: |
+            Unauthorized; the experiment is registered to an
+            experimenter.
+          schema:
+            type: string
+        404:
+          $ref: "#/responses/expNotFound"
+        500:
+          description: Server error.
+          schema:
+            type: string
+  /auth/makecsv:
+    get:
+      description: |
+        Creation of a **Tab Separated Values** file of the results of an
+        experiment, in the format we're used to since version 1.0. It is 
+        indeed a TSV, **not** a CSV. This request needs authentication,
+        for a request for an unregistered experiment with no registered
+        experimenter, use `/makecsv/
+      tags:
+        - results
+        - access-control
+      security:
+        - digestAuth: []
+      produces:
+        - text/tsv
+      consumes:
+        - application/x-www-form-urlencoded
+      parameters:
+        - $ref: "#/parameters/sourceurl"
+        - $ref: "#/parameters/experimentName"
+        - name: file
+          type: string
+          in: query
+          required: false
+          default: default.csv
+          description: |
+            An optional parameter: if present, will return only files that
+            have been tagged with the given `destination` parameter. If empty,
+            the response will be based on untagged responses, which are
+            collected to `default.csv`.
+      responses:
+        200:
+          description: Returns the result TSV.
+          schema:
+            type: file
+        400:
+          description: |
+            Wrong request, both source URL and experiment name
+            needed.
+          schema:
+            type: string
+          examples:
+            text/plain:
+              "false"
+        403:
+          description: |
+            Unauthorized; the experiment is registered to a different
+            experimenter.
+          schema:
+            type: string
+        404:
+          $ref: "#/responses/expNotFound"
+        500:
+          description: Server error.
+          schema:
+            type: string
+  /users:
+    get:
+      description: |
+        Returns a Tab Separated Values file with the userCodes and the number
+        of responses per each user in the experiment. This request will only 
+        work for unregistered experiments, for registered ones, 
+        use `/auth/users`
+      tags:
+        - "1.0"
+        - results
+        - no-access-control
+      produces:
+        - text/tsv
+      consumes:
+        - application/x-www-form-urlencoded
+      parameters:
+        - $ref: "#/parameters/sourceurl"
+        - $ref: "#/parameters/experimentName"
+      responses:
+        200:
+          description: Returns the resulting users TSV.
+          schema:
+            type: file
+        400:
+          description: |
+            Wrong request, both source URL and experiment name
+            needed.
+          schema:
+            type: string
+          examples:
+            text/plain:
+              "false"
+        403:
+          description: |
+            Unauthorized; the experiment is registered to an
+            experimenter.
+          schema:
+            type: string
+        404:
+          $ref: "#/responses/expNotFound"
+        500:
+          description: Server error.
+          schema:
+            type: string
+  /auth/users:
+    get:
+      description: |
+        Returns a Tab Separated Values file with the userCodes and the number
+        of responses per each user in the experiment. For a request with no
+        authorization, use `/users`, where you can get the same information
+        for any unregistered experiment.
+      tags:
+        - results
+        - access-control
+      security:
+        - digestAuth: []
+      produces:
+        - text/tsv
+      consumes:
+        - application/x-www-form-urlencoded
+      parameters:
+        - $ref: "#/parameters/sourceurl"
+        - $ref: "#/parameters/experimentName"
+      responses:
+        200:
+          description: Returns the resulting users TSV.
+          schema:
+            type: file
+        400:
+          description: |
+            Wrong request, both source URL and experiment name
+            needed.
+          schema:
+            type: string
+          examples:
+            text/plain:
+              "false"
+        403:
+          description: |
+            Unauthorized; the experiment is registered to a different
+            experimenter.
+          schema:
+            type: string
+        404:
+          $ref: "#/responses/expNotFound"
+        500:
+          description: Server error.
+          schema:
+            type: string
+  /destinations:
+    get:
+      description: |
+        Get the list of destinations uploaded to by the experiment. Each
+        `dbWrite` operation can upload results to any destination file, making
+        separation of different sets of results possible. Classic use cases are
+        separate `demographics.csv` and `suggestions.csv` destinations. This 
+        request will only work for unregistered experiments, for registered 
+        ones, use `/auth/destinations`
+      tags:
+        - results
+        - no-access-control
+      produces:
+        - application/json
+      consumes:
+        - application/x-www-form-urlencoded
+      parameters:
+        - $ref: "#/parameters/sourceurl"
+        - $ref: "#/parameters/experimentName"
+      responses:
+        200:
+          description: Success, returns the array of destinations.
+          schema:
+            type: array
+            items:
+              type: string
+          examples:
+            application/json:
+              ["default.csv", "demographics.csv", "suggestions.csv"]
+        400:
+          description: |
+            Wrong request, both source URL and experiment name
+            needed.
+          schema:
+            type: string
+          examples:
+            text/plain:
+              "false"
+        403:
+          description: |
+            Unauthorized; the experiment is registered to an experimenter.
+          schema:
+            type: string
+        404:
+          $ref: "#/responses/expNotFound"
+        500:
+          description: Server error
+          schema:
+            type: string
+  /auth/destinations:
+    get:
+      description: |
+        Get the list of destinations uploaded to by the experiment. Each
+        `dbWrite` operation can upload results to any destination file, making
+        separation of different sets of results possible. Classic use cases are
+        separate `demographics.csv` and `suggestions.csv` destinations.  For a 
+        request with no authorization, use `/destinations`, where you can get 
+        the same information for any unregistered experiment.
+      security:
+        - digestAuth: []
+      tags:
+        - results
+        - access-control
+      produces:
+        - application/json
+      consumes:
+        - application/x-www-form-urlencoded
+      parameters:
+        - $ref: "#/parameters/sourceurl"
+        - $ref: "#/parameters/experimentName"
+      responses:
+        200:
+          description: Success, returns the array of destinations.
+          schema:
+            type: array
+            items:
+              type: string
+          examples:
+            application/json:
+              ["default.csv", "demographics.csv", "suggestions.csv"]
+        400:
+          description: |
+            Wrong request, both source URL and experiment name
+            needed.
+          schema:
+            type: string
+          examples:
+            text/plain:
+              "false"
+        403:
+          description: |
+            Unauthorized; the experiment is registered to another experimenter.
+          schema:
+            type: string
+        404:
+          $ref: "#/responses/expNotFound"
+        500:
+          description: Server error
+          schema:
+            type: string
+    
+  /experimenter:
+    get:
+      description: Looks up whether the given experimenter exists.
+      tags:
+        - no-access-control
+        - experimenter
+      produces:
+        - text/plain
+      consumes:
+        - application/x-www-form-urlencoded
+      parameters:
+        - $ref: "#/parameters/experimenter"
+      responses:
+        200:
+          description: |
+            The experimenter exists. Returns the experimenter
+            username.
+          schema:
+            type: string
+          examples: 
+            text/plain:
+              "profsmith2"
+        404:
+          description: Experimenter does not exist.
+          schema:
+            type: string
+          examples:
+            text/plain:
+              "none"
+        500:
+          description: Server error.
+          schema:
+            type: string
+    post:
+      description: Registers a new experimenter.
+      tags:
+        - no-access-control
+        - experimenter
+      produces:
+        - text/plain
+      consumes:
+        - application/x-www-form-urlencoded
+      parameters:
+        - $ref: "#/parameters/experimenter"
+        - $ref: "#/parameters/ha1"
+      responses:
+        200:
+          description: Successful registration.
+          schema:
+            type: string
+          examples:
+            text/plain:
+              done
+        400:
+          description: Wrong request. Make sure to pass both parameters.
+          schema:
+            type: string
+          examples:
+            text/plain:
+              Wrong request!
+        409:
+          description: Experimenter already exists!
+          schema:
+            type: string
+          examples:
+            text/plain:
+              conflict
+        500:
+          description: Server error.
+          schema:
+            type: string
+  /auth/experimenter:
+    put:
+      description: Change password for an experimenter.
+      tags:
+        - access-control
+        - experimenter
+      security:
+        - digestAuth: []
+      produces:
+        - text/plain
+      consumes:
+        - application/x-www-form-urlencoded
+      parameters:
+        - $ref: "#/parameters/experimenter"
+        - $ref: "#/parameters/ha1"
+      responses:
+        200:
+          description: Successful password change.
+          schema:
+            type: string
+          examples:
+            text/plain:
+              done
+        403:
+          description: Unauthorized.
+          schema:
+            type: string
+          examples:
+            text/plain:
+              not authorized
+        404:
+          description: Experimenter does not exist.
+        500:
+          description: Server error.
+    delete:
+      description: Remove an experimenter (unregister).
+      tags:
+        - access-control
+        - experimenter
+      security:
+        - digestAuth: []
+      produces:
+        - text/plain
+      consumes:
+        - application/x-www-form-urlencoded
+      parameters:
+        - $ref: "#/parameters/experimenter"
+        - $ref: "#/parameters/ha1"
+      responses:
+        200:
+          description: Successful removal.
+          schema:
+            type: string
+          examples:
+            text/plain:
+              done
+        403:
+          description: Unauthorized.
+          schema:
+            type: string
+          examples:
+            text/plain:
+              not authorized
+        404:
+          description: Experimenter does not exist.
+        500:
+          description: Server error.
+  /auth/me:
+    get:
+      description: |
+        Returns the experimenter name that the request is signed with.
+      tags:
+        - access-control
+        - experimenter
+      security:
+        - digestAuth: []
+      produces:
+        - text/plain
+      responses:
+        200:
+          description: You are logged in.
+          schema:
+            type: string
+          examples:
+            text/plain:
+              profsmith2
+        404:
+          description: You are not logged in.
+          schema:
+            type: string
+          examples:
+            text/plain:
+              none
+  /registration:
+    get:
+      description: |
+        Returns whether the experiment is registered to an experimenter.
+      tags:
+        - register-experiments
+        - no-access-control
+      produces:
+        - text/plain
+      consumes:
+        - application/x-www-form-urlencoded
+      parameters:
+        - $ref: "#/parameters/sourceurl"
+        - $ref: "#/parameters/experimentName"
+      responses:
+        200:
+          description: Experiment is registered.
+          schema:
+            type: string
+          examples:
+            text/plain:
+              true
+        400:
+          description: Wrong request.
+          schema:
+            type: string
+          examples:
+            text/plain:
+              Wrong request
+        404:
+          description: Experiment is not registered.
+          schema:
+            type: string
+          examples:
+            text/plain:
+              false
+        500:
+          description: Server error.
+          schema:
+            type: string
+  /auth/registration:
+    post:
+      description: |
+        Registers an experiment to the experimenter
+      tags:
+        - register-experiments
+        - access-control
+      security:
+        - digestAuth: []
+      produces:
+        - text/plain
+      consumes:
+        - application/x-www-form-urlencoded
+      parameters:
+        - $ref: "#/parameters/sourceurl"
+        - $ref: "#/parameters/experimentName"
+        - $ref: "#/parameters/experimenter"
+      responses:
+        200:
+          description: Experiment is successfully registered.
+          schema:
+            type: string
+          examples:
+            text/plain:
+              "true"
+        400:
+          description: Wrong request.
+          schema:
+            type: string
+          examples:
+            text/plain:
+              Wrong request
+        403:
+          description: Not authorized.
+          schema:
+            type: string
+          examples:
+            text/plain:
+              not authorized
+        500:
+          description: |
+            Server error. Investigate passed error message for further
+            information. Problems include experiment already having data
+            uploaded, or it might be already registered.
+          schema:
+            type: string            
+          examples:
+            text/plain:
+              Experiment already has data!
+    delete:
+      description: |
+        Removes a registration from an experiment. Does not remove the data
+        from the experiment!
+      tags:
+        - register-experiments
+        - access-control
+      security:
+        - digestAuth: []
+      produces:
+        - text/plain
+      consumes:
+        - application/x-www-form-urlencoded
+      parameters:
+        - $ref: "#/parameters/sourceurl"
+        - $ref: "#/parameters/experimentName"
+        - $ref: "#/parameters/experimenter"
+      responses:
+        200:
+          description: Experiment is successfully registered.
+        400:
+          description: Wrong request.
+          schema:
+            type: string
+          examples:
+            text/plain:
+              Wrong request
+        403:
+          description: Not authorized.
+          schema:
+            type: string
+          examples:
+            text/plain:
+              not authorized
+        500:
+          description: |
+            Server error.
+          schema:
+            type: string            
+
+            
+responses:
+  expNotFound:
+    description: Experiment not found.
+    schema:
+      type: string
+    examples:
+      text/plain:
+        No such experiment!
+
+              
