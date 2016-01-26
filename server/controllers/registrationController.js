@@ -61,7 +61,7 @@ module.exports.getRegistration = function(req, res){
     var experiment = new Experiment(sourceurl, experimentName);
     Registration.find(experiment).then(function(reg){
         if(!reg){
-            res.status(200).end("false");
+            res.status(404).end("false");
         }
         else{
             res.status(200).end("true");
