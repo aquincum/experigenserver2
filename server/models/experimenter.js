@@ -54,7 +54,7 @@ module.exports.updateExperimenter = function(username, ha1){
             coll = db.collection("experimenters");
             return coll.count({username: username});
         })
-        .then(function(err, n){
+        .then(function(n){
             if(n === 0) throw new Error("not found");
             return coll.update({username: username},
                                {username: username,
