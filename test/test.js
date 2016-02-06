@@ -696,7 +696,7 @@ describe("Experimenter accounts", function(){
             request(server)
                 .get("/registration?sourceurl=" + encodeURIComponent(tempsourceurl) + 
                      "&experimentName=" + tempexperimentname)
-                .expect(200)
+                .expect(404)
                 .expect("false", done);
         }); 
         it("Should let me write to registered experiment", function(done){
