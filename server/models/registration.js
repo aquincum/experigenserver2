@@ -120,5 +120,31 @@ Registration.find = function(experiment){
         });
 };
 
+/**
+ * Finds all experiments registered to an experimenter.
+ * @param {string} experimenter The experimenter username
+ * @returns {Promise<module:server/models/experiment~Experiment[]>} 
+ * All experiments registered to this experimenter.
+ * @static
+ */
+Registration.findAll = function(experimenter){
+    var reg = new Registration(experimenter, new Experiment("none", "none"));
+    return reg.connect()
+        .then(function(coll){
+            return coll.find({
+                "experimenter": experimenter
+            }).toArray();
+        }).then(function(docs){
+            if (!docs){
+                return [];
+            }
+            else {
+                return docs.map(function(doc){
+                    return new Experiment(doc.experiment.sourceUrl, doc.experiment.experimentName);
+                });
+            }
+        });
+};
+
 
 module.exports = Registration;

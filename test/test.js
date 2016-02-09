@@ -698,7 +698,29 @@ describe("Experimenter accounts", function(){
                      "&experimentName=" + tempexperimentname)
                 .expect(404)
                 .expect("false", done);
-        }); 
+        });
+        it("Should list existing registrations", function(done){
+            expectAuthDigest("/auth/registration?experimenter=" + username,
+                             username,
+                             password2,
+                             "get",
+                             server,
+                             function(r){
+                                 r.expect(200)
+                                     .expect(function(res){
+                                         var regs, exp = new Experiment(tempsourceurl, tempexperimentname + "r");
+                                         exp.cleanURL();
+                                         assert.doesNotThrow(function(){
+                                             regs = JSON.parse(res.text);
+                                         });
+                                         assert.equal(regs.length, 1);
+                                         assert.equal(regs[0].experimentName,exp.experimentName);
+                                         assert.equal(regs[0].sourceUrl,exp.sourceUrl);
+                                     })
+                                     .end(done);
+                             });
+
+        });
         it("Should let me write to registered experiment", function(done){
             request(server).get("/dbwrite?experimentName=" + tempexperimentname + "r&" +
                                 "sourceurl=" + tempsourceurl + "&" +

@@ -682,6 +682,52 @@ paths:
           schema:
             type: string
   /auth/registration:
+    get:
+      description: |
+        Returns a list of experiments registered to the experimenter.
+      tags:
+        - register-experiments
+        - access-control
+      produces:
+        - application/json
+      consumes:
+        - application/x-www-form-urlencoded
+      parameters:
+        - $ref: "#/parameters/experimenter"
+      responses:
+        200:
+          description: Success, returns the list of experiments registered to the experimenter.
+          schema:
+            type: array
+            items:
+              type: object
+              properties:
+                sourceURL:
+                  type: string
+                experimentName:
+                  type: string
+          examples:
+            text/plain:
+              true
+        400:
+          description: Wrong request.
+          schema:
+            type: string
+          examples:
+            text/plain:
+              Wrong request
+        404:
+          description: Experiment is not registered.
+          schema:
+            type: string
+          examples:
+            text/plain:
+              false
+        500:
+          description: Server error.
+          schema:
+            type: string
+  /auth/registration:
     post:
       description: |
         Registers an experiment to the experimenter

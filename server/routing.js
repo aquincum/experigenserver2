@@ -36,7 +36,8 @@ var routes = {
             "/auth/me": authCtrl.me,
             "/auth/makecsv": authCtrl.checkRegistration.bind(null, resultsCtrl.makeCSV),
             "/auth/users": authCtrl.checkRegistration.bind(null, resultsCtrl.getUsers),
-            "/auth/destinations": authCtrl.checkRegistration.bind(null, getDestinations)
+            "/auth/destinations": authCtrl.checkRegistration.bind(null, getDestinations),
+            "/auth/registration": regCtrl.getAllRegistrations
         },
         post: {
             "/auth/registration": regCtrl.postRegistration

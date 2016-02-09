@@ -70,3 +70,23 @@ module.exports.getRegistration = function(req, res){
         res.status(500).end(err);
     });
 };
+
+/**
+ * GET request, will find all of the experiments of the
+ * experimenter, and return them as a JSON array.
+ */
+module.exports.getAllRegistrations = function(req, res){
+    var experimenter = req.query.experimenter,
+        user = req.user ? req.user.username : "";
+    if (!experimenter){
+        return res.status(400).end("Wrong request");
+    }
+    if(!user || user !== experimenter){
+        return res.status(403).end("not authorized");
+    }
+    Registration.findAll(experimenter).then(function(exps){
+        res.status(200).json(exps);
+    }).catch(function(err){
+        res.status(500).end(err);
+    });
+};
