@@ -118,7 +118,7 @@ module.exports = function(app){
                 .then(function(data){
                     $scope.sourceURL = data.data;
                 }).catch(function(data){
-                    responder.respond("Error cleaning url: " + data.status);
+                    responder.respond("Error cleaning url, possibly illegal characters. Make sure there are no hyphens in the URL!", "danger");
                 });
         };
     });
