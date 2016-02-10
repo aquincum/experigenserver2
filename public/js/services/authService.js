@@ -40,6 +40,10 @@ module.exports = function(app){
             setLoggedIn(false);
         };
 
+        service.getExperimenter = function(){
+            return experimenter;
+        }
+
         /**
          * Send an AJAX request with Digest authorization
          * @returns Promise
@@ -50,6 +54,10 @@ module.exports = function(app){
                           url: uri}).then(function(response){
                               return response; // No auth was needed!
                           }).catch(function(response){
+                              if(response.status != 401){
+                                  throw response;
+                              }
+                              console.log("HERE2");
                               newheader = reqAuthDigest.reqAuthDigest(uri,
                                                                       experimenter,
                                                                       password,

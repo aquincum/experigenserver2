@@ -6,17 +6,67 @@
   </head>
 
   <body><div class="container" ng-app="adminApp" ng-controller="StatusController">
-      
-      <div class="col-lg-6 col-lg-offset-3">
+
+      <!--
+      <div class="col-lg-3">
+        <ul class="nav nav-pills">
+          
+        </ul>
+      </div>
+      -->
         <div class="page-header">
           <h1 class="text-center">Experigen <small>administration</small></h1>
         </div>
+      
+      <div class="col-lg-6 col-lg-offset-3">
         
-        <form ng-controller="ExperimentDownloadController">
+        <form ng-controller="ExperimentDownloadController" ng-hide="mainstate.registering">
+
+          <div class="btn-group" ng-show="state.loggedIn">
+            <input type="button", ng-click="mainstate.registering = true" name="showRegistration" value="Register new experiment" class="btn btn-primary">
+            <input type="button", ng-show="state.surlSelected && experimentName.length > 0" name="removeRegistration" value="Remove registration" ng-click="removeRegistration()" class="btn btn-danger">
+          </div>
+
           
           <div class="form-group">
             <label for="sourceURL">The source URL</label>
-            <input type="text" ng-model="sourceURL" class="form-control" placeholder="URL"></input>
+            <input type="text" ng-hide="state.loggedIn" ng-model="sourceURL" class="form-control" placeholder="URL"></input>
+            <select id="sourceURLdropdown" class="form-control dropdown" ng-model="sourceURL" ng-show="state.loggedIn && reggedExperiments.length > 0" ng-change="surlChange()">
+              <option ng-repeat="lisu in lisourceURLs">{{lisu}}</option>
+            </select>
+            <span class="well well-sm" ng-show="state.loggedIn && reggedExperiments.length == 0">No experiments are registered yet</span>
+          </div>
+          
+          <div class="form-group" ng-hide="state.loggedIn && !state.surlSelected">
+            <label for="experimentName">The experiment name</label>
+            <input type="text" ng-hide="state.loggedIn" ng-model="experimentName" class="form-control" placeholder="experiment name"></input>
+            <select id="experimentNamedropdown" class="form-control dropdown" ng-model="experimentName" ng-show="state.loggedIn && state.surlSelected" ng-change="enChange()">
+              <option ng-repeat="exna in exnames">{{exna}}</option>
+            </select>
+          </div>
+          
+          <div class="form-group" ng-hide="state.loggedIn && !state.destsDownloaded">
+            <label for="destination">The destination file (which CSV was the data uploaded to?)</label>
+            <input type="text" ng-hide="state.loggedIn" ng-model="destination" class="form-control" placeholder="destination (default is the main xp.csv)" ng-hide="destList.length > 0"></input>
+            <select id="destinationdropdown" class="form-control dropdown" ng-model="destListSelect" ng-show="state.destsDownloaded">
+              <option ng-repeat="dest in destList">{{dest}}</option>
+            </select>
+          </div>
+          <br>
+          <div class="btn-group" role="group">
+            <input type="button" ng-hide="state.loggedIn && !state.destsDownloaded" ng-click="checkExistence()" name="checkExistence" value="Check existence" class="btn btn-info"></input>
+            
+            <input type="button" ng-hide="state.loggedIn" ng-click="findDestinations()" name="findDestinations" value="Populate destinations" class="btn btn-default"></input>
+            
+            <input type="button" ng-hide="state.loggedIn && !state.destsDownloaded" ng-click="getData()" name="getData" value="Download data" class="btn btn-primary"></input>
+          </div>
+          
+        </form>
+
+        <form ng-show="mainstate.registering" ng-controller="RegistrationController">
+          <div class="form-group">
+            <label for="sourceURL">The source URL as is</label>
+            <input type="text" ng-model="uncleanedURL" class="form-control" placeholder="URL"></input>
           </div>
           
           <div class="form-group">
@@ -24,22 +74,12 @@
             <input type="text" ng-model="experimentName" class="form-control" placeholder="experiment name"></input>
           </div>
           
-          <div class="form-group">
-            <label for="destination">The destination file (which CSV was the data uploaded to?)</label>
-            <input type="text" ng-model="destination" class="form-control" placeholder="destination (default is the main xp.csv)" ng-hide="destList.length > 0"></input>
-            <select id="destinationdropdown" class="form-control dropdown" ng-model="destListSelect" ng-show="destList.length > 0">
-              <option ng-repeat="dest in destList">{{dest}}</option>
-            </select>
-          </div>
-          <br>
           <div class="btn-group" role="group">
-            <input type="button" ng-click="checkExistence()" name="checkExistence" value="Check existence" class="btn btn-info"></input>
+            <input type="button" ng-click="doRegister()" name="register" value="Register experiment" class="btn btn-primary"></input>
             
-            <input type="button" ng-click="findDestinations()" name="findDestinations" value="Populate destinations" class="btn btn-default"></input>
-            
-            <input type="button" ng-click="getData()" name="getData" value="Download data" class="btn btn-primary"></input>
+            <input type="button" ng-click="mainstate.registering = false" name="cancel" value="Cancel" class="btn btn-danger"></input>
           </div>
-          
+
         </form>
         
         
@@ -49,8 +89,8 @@
         </div>
         
       </div>
-      <div class="col-lg-3">
-        <div class="page-header">
+      <div class="col-lg-2 col-lg-offset-1">
+        <div class="row">
           <div ng-controller="ExperimenterController">
 
             <div class="dropdown">

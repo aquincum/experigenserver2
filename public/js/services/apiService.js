@@ -43,8 +43,9 @@ module.exports = function(app){
                 getPromise = $http.get(req);
             }
             return getPromise.catch(function(err){
-                        handleError(err);
-                    });
+                handleError(err);
+                throw err;
+            });
 
         };
         return { apiCall: apiCall,

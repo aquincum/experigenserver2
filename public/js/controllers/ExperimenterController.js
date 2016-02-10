@@ -4,7 +4,7 @@ module.exports = function(app){
     app.controller("ExperimenterController", function($scope, apiService, authService,responder, $http){
         var updateLogin = function(){
             var li = authService.isLoggedIn();
-            $scope.$apply(function(){
+//            $scope.$apply(function(){
                 $scope.loggedIn = li;
                 if(li){
                     $scope.toplabel = $scope.experimenter;
@@ -12,7 +12,7 @@ module.exports = function(app){
                 else{
                     $scope.toplabel = "Not logged in";
                 }
-            });
+//            });
         };
         $scope.experimenter = "";
         //    $scope.toplabel = ;

@@ -1,10 +1,17 @@
 module.exports = function(app){
-    app.controller("ExperimentDownloadController", function($scope, responder, apiService, FileSaver, Blob){
+    app.controller("ExperimentDownloadController", function($scope, responder, apiService, FileSaver, Blob, authService, $timeout){
         $scope.sourceURL = "";
         $scope.experimentName = "";
         $scope.destination = "";
         $scope.destList = [];
         $scope.destListSelect = "";
+        $scope.reggedExperiments = [];
+
+        $scope.state = {
+            loggedIn: false,
+            surlSelected: false,
+            destsDownloaded: false
+        };
 
         $scope.getDestination = function(){
             if($scope.destList.length > 0){
@@ -28,6 +35,26 @@ module.exports = function(app){
             });
         };
 
+        $scope.$on("updateLogin", function (event){
+            var li = authService.isLoggedIn();
+            $scope.$apply(function(){
+                $scope.state.loggedIn = li;
+                $scope.state.surlSelected = $scope.state.destsDownloaded = false;
+                if(!li){
+                    $scope.reggedExperiments = [];
+                }
+                else{
+                    authService.ajaxDigest("/auth/registration?experimenter=" + authService.getExperimenter(), "GET")
+                        .then(function(regs){
+                            $scope.reggedExperiments = regs.data;
+                            $scope.state.surlSelected = false;
+                            $scope.lisourceURLs = regs.data.map(exp => exp.sourceUrl);
+                        }).catch(function(err){
+                            responder.respond("Error getting list of registrations: ", err);
+                        });
+                }
+            });
+        });
         $scope.findDestinations = function() {
             apiService.apiCall("destinations", $scope).then(function(data){
                 var dests;
@@ -38,7 +65,48 @@ module.exports = function(app){
                 $scope.destination = "";
                 $scope.destList = data.data;
                 $scope.destListSelect = $scope.destList[0];
+                $scope.state.destsDownloaded = true;
             });
         };
+
+        $scope.surlChange = function(){
+            $scope.state.surlSelected = true;
+            $scope.exnames = $scope.reggedExperiments
+                .filter(exp => exp.sourceUrl == $scope.sourceURL)
+                .map(exp => exp.experimentName);
+        };
+
+        $scope.enChange = function(){
+            $scope.findDestinations();
+        };
+
+        $scope.removeRegistration = function(){
+            if(!$scope.state.loggedIn){
+                return responder.respond("You're not logged in.", "danger");
+            }
+            if($scope.sourceURL.length < 1){
+                return responder.respond("No sourceURL given.", "danger");
+            }
+            if($scope.experimentName.length < 1){
+                return responder.respond("No experiment name given.", "danger");
+            }
+            var params = [
+                "experimenter=" + authService.getExperimenter(),
+                "sourceurl=" + $scope.sourceURL,
+                "experimentName=" + $scope.experimentName
+            ]
+            var url = "/auth/registration?" + params.join("&");
+            authService.ajaxDigest(url, "DELETE")
+                .then(function(){
+                    responder.respond("Registration deleted!", "success");
+                    $timeout($scope.$broadcast.bind($scope,"updateLogin"), 0);
+                })
+                .catch(function(err){
+                    responder.respond("Problem with deletion: " + err.text);
+                });
+                                   
+        };
+
+        //        $scope.
     });
 };

@@ -1,5 +1,8 @@
 module.exports = function(app){
     app.controller("StatusController", function($scope){
+        $scope.mainstate = {
+            registering: false
+        };
         $scope.status = {
             text: "Welcome!",
             alert: "info"
