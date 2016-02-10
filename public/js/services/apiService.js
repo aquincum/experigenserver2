@@ -48,8 +48,28 @@ module.exports = function(app){
             });
 
         };
+
+        /** A simple API call, with optional authentication.
+         * No manipulation of scope data. Wrapped basicly around `$http.get`
+         * and `authService.ajaxDigest`.
+         * @param {string} request The uri to request
+         * @param {[boolean=false]} auth Whether to send an authenticated request.
+         * @returns Promise 
+         */
+        var simpleApiCall = function(request, auth){
+            if(auth && authService.isLoggedIn()){
+                request = "auth/" + request;
+                return authService.ajaxDigest(request, "get");
+            }
+            else{
+                return $http.get(request);
+            }
+        };
+        
         return { apiCall: apiCall,
-                 handleError: handleError};
+                 handleError: handleError,
+                 simpleApiCall: simpleApiCall
+               };
     });
 
 };

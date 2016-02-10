@@ -14,6 +14,7 @@ var resultsCtrl = require("./controllers/results");
 var getDestinations = require("./controllers/getDestinations");
 var authCtrl = require("./controllers/authenticationController");
 var regCtrl = require("./controllers/registrationController");
+var cleanURL = require("./controllers/cleanURL");
 
 var routes = {
     noAuth: {
@@ -25,7 +26,8 @@ var routes = {
             "/users": authCtrl.checkRegistration.bind(null, resultsCtrl.getUsers),
             "/destinations": authCtrl.checkRegistration.bind(null, getDestinations),
             "/experimenter": authCtrl.getExperimenter,
-            "/registration": regCtrl.getRegistration
+            "/registration": regCtrl.getRegistration,
+            "/cleanurl": cleanURL
         },
         post: {
             "/experimenter": authCtrl.postExperimenter

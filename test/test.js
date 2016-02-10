@@ -118,6 +118,17 @@ describe("URL cleaning", function(){
     it("should not take off https://", function(){
 	assert.equal((new Experiment("https://my.site/")).cleanURL(), "https...my.site");
     });
+    it("should work over GET request", function(done){
+        request(server)
+            .get("/cleanurl?sourceurl=http://my.site/my/path/")
+            .expect(200)
+            .expect("my.site.my.path", done);
+    });
+    it("GET should want a sourceURL", function(done){
+        request(server)
+            .get("/cleanurl")
+            .expect(400, done);
+    });
 });
 
 describe("Hashing", function(){

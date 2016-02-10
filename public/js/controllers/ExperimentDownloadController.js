@@ -75,10 +75,10 @@ module.exports = function(app){
             $scope.state.surlSelected = true;
             $scope.exnames = $scope.reggedExperiments
                 .filter(function(exp){
-                    return exp.sourceUrl == $scope.sourceURL
+                    return exp.sourceUrl == $scope.sourceURL;
                 })
                 .map(function(exp){
-                    return exp.experimentName
+                    return exp.experimentName;
                 });
         };
 
@@ -113,6 +113,13 @@ module.exports = function(app){
                                    
         };
 
-        //        $scope.
+        $scope.convertURL = function(){
+            apiService.simpleApiCall("cleanurl?sourceurl=" + $scope.sourceURL)
+                .then(function(data){
+                    $scope.sourceURL = data.data;
+                }).catch(function(data){
+                    responder.respond("Error cleaning url: " + data.status);
+                });
+        };
     });
 };

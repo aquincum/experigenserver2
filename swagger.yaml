@@ -815,7 +815,27 @@ paths:
             Server error.
           schema:
             type: string            
-
+  /cleanurl:
+    get:
+      description: |
+        Returns the appropriately cleaned and converted URL as the `Experigen`
+        server has been cleaning it since version 1.
+      tags:
+        - misc
+      produces:
+        - text/plain
+      consumes:
+        - application/x-www-form-urlencoded
+      parameters:
+        - $ref: "#/parameters/sourceurl"
+      responses:
+        200:
+          description: Success. Returns the cleaned URL.
+          schema:
+            type: string
+          examples:
+            text/plain:
+              "my.site.com.main.experiment.index.html"
             
 responses:
   expNotFound:
