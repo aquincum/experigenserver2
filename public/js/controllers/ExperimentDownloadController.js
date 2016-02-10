@@ -48,7 +48,9 @@ module.exports = function(app){
                         .then(function(regs){
                             $scope.reggedExperiments = regs.data;
                             $scope.state.surlSelected = false;
-                            $scope.lisourceURLs = regs.data.map(exp => exp.sourceUrl);
+                            $scope.lisourceURLs = regs.data.map(function(exp){
+                                return exp.sourceUrl
+                            });
                         }).catch(function(err){
                             responder.respond("Error getting list of registrations: ", err);
                         });
@@ -72,8 +74,12 @@ module.exports = function(app){
         $scope.surlChange = function(){
             $scope.state.surlSelected = true;
             $scope.exnames = $scope.reggedExperiments
-                .filter(exp => exp.sourceUrl == $scope.sourceURL)
-                .map(exp => exp.experimentName);
+                .filter(function(exp){
+                    return exp.sourceUrl == $scope.sourceURL
+                })
+                .map(function(exp){
+                    return exp.experimentName
+                });
         };
 
         $scope.enChange = function(){

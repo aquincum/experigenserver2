@@ -42,12 +42,18 @@ describe("apiService", function(){
         $httpBackend.expectGET(mockScope.url());
         $httpBackend.flush();
     });
-    it("Should handle errors on API calls", function(){
+    it("Should handle errors on API calls", function(done){
         $httpBackend.whenGET(mockScope.url())
             .respond(404);
-        apiService.apiCall("users", mockScope);
-        $httpBackend.expectGET(mockScope.url());
-        $httpBackend.flush();
-        expect(responder.respond).toHaveBeenCalledWith("Experiment does not exist!", "danger");
+        try{
+            apiService.apiCall("users", mockScope);
+            $httpBackend.expectGET(mockScope.url());
+            $httpBackend.flush();
+        }
+        catch(e){
+            expect(responder.respond).toHaveBeenCalledWith("Experiment does not exist!", "danger");
+            expect(e.status).toEqual(404);
+            done();
+        }
     });
 });
