@@ -9,6 +9,6 @@
 
 ## Why?
 
-There have been some problems with the original PHP Experigen server,
+There have been some problems with the original Perl Experigen server,
 so this is an attempt to clean up how the server works and how the data
 can be more safely downloaded.
