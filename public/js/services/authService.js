@@ -8,6 +8,7 @@ module.exports = function(app){
         var loggedIn = false;
 
         var setLoggedIn = function(li){
+            console.log("Logged in =  ", li, "as ", experimenter, ", password is ", password);
             loggedIn = li;
             $timeout($rootScope.$broadcast.bind($rootScope, "updateLogin"), 0);
         };
@@ -51,10 +52,14 @@ module.exports = function(app){
         service.ajaxDigest = function(uri, method){
             var newheader = "";
             return $http({method: method,
-                          url: uri}).then(function(response){
+                          url: uri,
+                          headers: {"Authorization": ""}
+                         }).then(function(response){
+                              console.log("No auth needed :O");
                               return response; // No auth was needed!
                           }).catch(function(response){
                               if(response.status != 401){
+                                  console.log("Oy vey!");
                                   throw response;
                               }
                               console.log("HERE2");
@@ -70,7 +75,9 @@ module.exports = function(app){
                                             }
                                            });
                           });
-                                   
+/*            return $http({method: method,
+                          url: uri
+                         })*/
         };
         
         
