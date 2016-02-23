@@ -5,6 +5,7 @@ doc/
 coverage/
 log
 public/dist/
+texput.log
 
 # Elastic Beanstalk Files
 .elasticbeanstalk/*

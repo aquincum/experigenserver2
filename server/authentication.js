@@ -8,7 +8,6 @@
     
 };*/
 
-// Strategy: digest
 
 var passport = require("passport"),
     DigestStrategy = require("passport-http").DigestStrategy,
@@ -17,9 +16,10 @@ var passport = require("passport"),
 var experimenterModel = require("./models/experimenter");
 
 
-/** The authentication middleware used in Express
+/** The authentication middleware used in Express for
+ * `digest` routes.
  */
-var authenticate = passport.authenticate.bind(passport, ["digest"]);
+var authenticateDigest = passport.authenticate.bind(passport, ["digest"]);
 
 
 /**
@@ -27,7 +27,8 @@ var authenticate = passport.authenticate.bind(passport, ["digest"]);
  * passport.js middleware, and set up routing for authentication.
  * Note: the password stored is an object with an "ha1" key, which
  * is passed to passport-http. It knows what to do with it.
- * @param {Server} app The Express application 
+ * @param {Server} app The Express application
+ * @param {String} path A path to set the middleware up on. 
  */
 var setup = function(app){
     /*app.use(function(req, res, next){
@@ -91,5 +92,5 @@ var setup = function(app){
 
 module.exports = {
     setup: setup,
-    authenticate: authenticate
+    authenticateDigest: authenticateDigest
 };

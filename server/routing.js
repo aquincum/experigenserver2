@@ -51,6 +51,25 @@ var routes = {
             "/auth/experimenter": authCtrl.deleteExperimenter,
             "/auth/registration": regCtrl.deleteRegistration
         }
+    },
+    digest: {
+        get: {
+            "/digest/me": authCtrl.me,
+            "/digest/makecsv": authCtrl.checkRegistration.bind(null, resultsCtrl.makeCSV),
+            "/digest/users": authCtrl.checkRegistration.bind(null, resultsCtrl.getUsers),
+            "/digest/destinations": authCtrl.checkRegistration.bind(null, getDestinations),
+            "/digest/registration": regCtrl.getAllRegistrations
+        },
+        post: {
+            "/digest/registration": regCtrl.postRegistration
+        },
+        put: {
+            "/digest/experimenter": authCtrl.putExperimenter
+        },
+        delete: {
+            "/digest/experimenter": authCtrl.deleteExperimenter,
+            "/digest/registration": regCtrl.deleteRegistration        
+        }
     }
 };
 
@@ -80,8 +99,8 @@ module.exports.route = function doRouting(server, emulate) {
             for(var path in routes[authenticated][method]){
                 server[method](
                     path,
-                    authenticated == "auth" ?
-                        authentication.authenticate() :
+                    authenticated == "digest" ?
+                        authentication.authenticateDigest() : 
                         noop,
                     routes[authenticated][method][path]
                 );
