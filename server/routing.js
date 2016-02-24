@@ -33,23 +33,23 @@ var routes = {
             "/experimenter": authCtrl.postExperimenter
         }
     },
-    auth: {
+    local: {
         get: {
-            "/auth/me": authCtrl.me,
-            "/auth/makecsv": authCtrl.checkRegistration.bind(null, resultsCtrl.makeCSV),
-            "/auth/users": authCtrl.checkRegistration.bind(null, resultsCtrl.getUsers),
-            "/auth/destinations": authCtrl.checkRegistration.bind(null, getDestinations),
-            "/auth/registration": regCtrl.getAllRegistrations
+            "/local/me": authCtrl.me,
+            "/local/makecsv": authCtrl.checkRegistration.bind(null, resultsCtrl.makeCSV),
+            "/local/users": authCtrl.checkRegistration.bind(null, resultsCtrl.getUsers),
+            "/local/destinations": authCtrl.checkRegistration.bind(null, getDestinations),
+            "/local/registration": regCtrl.getAllRegistrations
         },
         post: {
-            "/auth/registration": regCtrl.postRegistration
+            "/local/registration": regCtrl.postRegistration
         },
         put: {
-            "/auth/experimenter": authCtrl.putExperimenter
+            "/local/experimenter": authCtrl.putExperimenter
         },
         delete: {
-            "/auth/experimenter": authCtrl.deleteExperimenter,
-            "/auth/registration": regCtrl.deleteRegistration
+            "/local/experimenter": authCtrl.deleteExperimenter,
+            "/local/registration": regCtrl.deleteRegistration
         }
     },
     digest: {
@@ -97,11 +97,18 @@ module.exports.route = function doRouting(server, emulate) {
     for(var authenticated in routes){
         for(var method in routes[authenticated]){
             for(var path in routes[authenticated][method]){
+                var authFunc = noop;
+                switch(authenticated){
+                case "local":
+                    authFunc = authentication.authenticateLocal();
+                    break;
+                case "digest":
+                    authFunc = authentication.authenticateDigest();
+                    //break;
+                }
                 server[method](
                     path,
-                    authenticated == "digest" ?
-                        authentication.authenticateDigest() : 
-                        noop,
+                    authFunc,
                     routes[authenticated][method][path]
                 );
                 console.log(path,method, "routed");

@@ -11,15 +11,24 @@
 
 var passport = require("passport"),
     DigestStrategy = require("passport-http").DigestStrategy,
+    LocalStrategy = require("passport-local").Strategy,
     AnonymousStrategy = require('passport-anonymous').Strategy;
 
 var experimenterModel = require("./models/experimenter");
+
+var HA1 = require("../reqAuthDigest").HA1;
 
 
 /** The authentication middleware used in Express for
  * `digest` routes.
  */
 var authenticateDigest = passport.authenticate.bind(passport, ["digest"]);
+
+/** The authentication middleware used in Express for
+ * `local` routes.
+ */
+var authenticateLocal = passport.authenticate.bind(passport, ["local"]);
+
 
 
 /**
@@ -70,6 +79,28 @@ var setup = function(app){
         }
     ));
     passport.use(new AnonymousStrategy());
+    passport.use(new LocalStrategy({
+        usernameField: "experimenter",
+        passwordField: "password"
+        },  function(experimenter, password, done){
+            console.log("Here we go!");
+            console.log("Arguments", arguments);
+            experimenterModel.findExperimenter(experimenter).then(function(user){
+                console.log("User:", user);
+                if(!user){
+                    done(null, false);
+                }
+                else if (user.password.ha1 !== HA1(experimenter, password)) {
+                    done(null, false);
+                }
+                else {
+                    done(null, user);
+                }
+            }).catch(function(err){
+                done(err);
+            })
+        }
+    ));
 
 
     passport.serializeUser(function(user, done) {
@@ -92,5 +123,6 @@ var setup = function(app){
 
 module.exports = {
     setup: setup,
-    authenticateDigest: authenticateDigest
+    authenticateDigest: authenticateDigest,
+    authenticateLocal: authenticateLocal
 };

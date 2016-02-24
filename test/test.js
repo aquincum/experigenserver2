@@ -567,6 +567,20 @@ describe("Experimenter accounts", function(){
                              });
         });
     });
+
+    describe("Local", function(){
+        it("Should be able to verify login with /me", function(done){
+            request(server)
+                .get("/local/me?experimenter="+username+"&password="+password1)
+                .expect(200)
+                .expect(username, done); 
+        });
+        it("Should reject bad login with /me", function(done){
+            request(server).get("/local/me?experimenter="+username+"zzz&password="+password1)
+                .expect(401, done);
+        });
+    });
+
     describe("update", function(){
         it("Should be able to update the current existing experimenter", function(done){
             expectAuthDigest("/digest/experimenter?experimenter=" + username + "&ha1=" + ha12,
@@ -732,6 +746,23 @@ describe("Experimenter accounts", function(){
                              });
 
         });
+        it("Should list existing registrations with local auth", function(done){
+            request(server)
+                .get("/local/registration?experimenter=" + username + "&password=" + password2)
+                .expect(200)
+                .expect(function(res){
+                    var regs, exp = new Experiment(tempsourceurl, tempexperimentname + "r");
+                    exp.cleanURL();
+                    assert.doesNotThrow(function(){
+                        regs = JSON.parse(res.text);
+                    });
+                    assert.equal(regs.length, 1);
+                    assert.equal(regs[0].experimentName,exp.experimentName);
+                    assert.equal(regs[0].sourceUrl,exp.sourceUrl);
+                })
+                .end(done);
+
+        });
         it("Should let me write to registered experiment", function(done){
             request(server).get("/dbwrite?experimentName=" + tempexperimentname + "r&" +
                                 "sourceurl=" + tempsourceurl + "&" +
@@ -850,10 +881,10 @@ describe("Removal", function(){
 	    assert.ok(res.result);
 	    assert.equal(res.result.ok, 1);
 	    assert.equal(res.result.n, written+1);
-            return experiment.getUserFileName();
+        return experiment.getUserFileName();
 	}).then(function(n){
 	    assert.equal(n, 1);
-            return true;
+        return true;
 	});
     });
 });
