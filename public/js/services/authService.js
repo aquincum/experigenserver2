@@ -25,7 +25,7 @@ module.exports = function(app){
         };
 
         service.login = function(){
-            return service.ajaxDigest("/auth/me", "GET")
+            return service.ajaxLocal("/auth/me", "GET")
                 .then(function(){
                     setLoggedIn(true);
                     return true;
@@ -43,7 +43,32 @@ module.exports = function(app){
 
         service.getExperimenter = function(){
             return experimenter;
-        }
+        };
+
+
+        /** Send an AJAX request with Local authorization.
+         * We'll be using this, as Digest is more usable for direct API access like
+         * from Rexperigen.
+         * @returns Promise
+         */
+        service.ajaxLocal = function(uri, method){
+            if(uri.indexOf("experimenter=") === -1){
+                uri += uri.indexOf("?") === -1 ? "?" : "&";
+                uri += "experimenter=" + experimenter;
+            }
+            if(uri.indexOf("password=") === -1){ // hope so!!
+                uri += "&password=" + password;
+            }
+            console.log("URI1:",uri);
+            if(uri.indexOf("/auth") !== -1){
+                uri = uri.replace("/auth", "/local");
+            }
+            console.log("URI2:",uri);
+            return $http({
+                method: method,
+                url: uri
+            })    
+        };
 
         /**
          * Send an AJAX request with Digest authorization
@@ -51,6 +76,9 @@ module.exports = function(app){
          */
         service.ajaxDigest = function(uri, method){
             var newheader = "";
+            if(uri.indexOf("/auth") !== -1){
+                uri = uri.replace("/auth", "/digest")
+            }
             return $http({method: method,
                           url: uri,
                           headers: {"Authorization": ""}

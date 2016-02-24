@@ -221,7 +221,7 @@ Experiment.prototype.write = function(query, errcnt){
     return this.connectToCollection()
         .then(function(coll){
             return coll.insert(query);
-        }).then(function(_){
+        }).then(function(){
             return true;
         }).catch(function(err){
             if(errcnt){

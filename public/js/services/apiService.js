@@ -37,7 +37,7 @@ module.exports = function(app){
 
             var getPromise;
             if(li){
-                getPromise = authService.ajaxDigest(req, "get");
+                getPromise = authService.ajaxLocal(req, "get");
             }
             else{
                 getPromise = $http.get(req);
@@ -51,7 +51,7 @@ module.exports = function(app){
 
         /** A simple API call, with optional authentication.
          * No manipulation of scope data. Wrapped basicly around `$http.get`
-         * and `authService.ajaxDigest`.
+         * and `authService.ajaxLocal`.
          * @param {string} request The uri to request
          * @param {[boolean=false]} auth Whether to send an authenticated request.
          * @returns Promise 
@@ -59,7 +59,7 @@ module.exports = function(app){
         var simpleApiCall = function(request, auth){
             if(auth && authService.isLoggedIn()){
                 request = "auth/" + request;
-                return authService.ajaxDigest(request, "get");
+                return authService.ajaxLocal(request, "get");
             }
             else{
                 return $http.get(request);

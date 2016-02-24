@@ -36,11 +36,13 @@ describe("authService", function(){
         expect(authService.isLoggedIn()).toEqual(false);
     });
 
-    it("ajaxDigest should work", function(done){
-        expectAuthedRequest($httpBackend, "/auth/teszt", "GET", "jej");
+    it("ajaxLocal should work", function(done){
+        $httpBackend.expectGET("/local/teszt?experimenter=alma&password=korte").respond(function(){
+            return [200, "jej"];
+        });
         authService.setExperimenter("alma");
         authService.setPassword("korte");
-        authService.ajaxDigest("/auth/teszt", "get").then(function(resp){
+        authService.ajaxLocal("/auth/teszt", "get").then(function(resp){
             expect(resp.data).toEqual("jej");
             done();
         }).catch(function(resp){
@@ -50,7 +52,7 @@ describe("authService", function(){
     });
 
     it("Should send a correct login", function (done){
-        expectAuthedRequest($httpBackend, "/auth/me", "GET", "alma");
+        $httpBackend.expectGET("/local/me?experimenter=alma&password=korte").respond(200, "alma");
         authService.setExperimenter("alma");
         authService.setPassword("korte");
         authService.login().then(function(li){
@@ -61,10 +63,7 @@ describe("authService", function(){
         $httpBackend.flush();
     });
     it("Should send an incorrect login and react as such", function (done){
-        expectAuthedRequest($httpBackend, "/auth/me", "GET", {
-            status: 401,
-            data: "none"
-        });
+        $httpBackend.expectGET("/local/me?experimenter=alma&password=k0rte").respond(401, "none");
         authService.setExperimenter("alma");
         authService.setPassword("k0rte");
         authService.login().then(function(li){
@@ -75,7 +74,7 @@ describe("authService", function(){
         $httpBackend.flush();
     });
     it("Should send a correct logout", function (done){
-        expectAuthedRequest($httpBackend, "/auth/me", "GET", "alma");
+        $httpBackend.expectGET("/local/me?experimenter=alma&password=korte").respond(200, "alma");
         authService.setExperimenter("alma");
         authService.setPassword("korte");
         authService.login().then(function(li){

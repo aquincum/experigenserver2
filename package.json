@@ -6,6 +6,7 @@
   "scripts": {
     "postinstall": "webpack",
     "build-client": "webpack",
+    "watch-client": "webpack --watch",
     "webpack": "webpack-dev-server",
     "start": "node main.js",
     "jsdoc": "node ./node_modules/jsdoc/jsdoc.js -r -R README.md -c jsdoc.conf.json -t ./node_modules/ink-docstrap/template -d doc main.js server/",

@@ -12,7 +12,7 @@ module.exports = function(app){
                 "experimentName=" + $scope.experimentName
             ];
             const url = "/auth/registration?" + params.join("&");
-            authService.ajaxDigest(url, "POST")
+            authService.ajaxLocal(url, "POST")
                 .then(function(){
                     responder.respond("Experiment registered!", "success");
                     $scope.$parent.mainstate.registering = false;
