@@ -53,7 +53,7 @@
     "yargs": "*"
   },
   "devDependencies": {
-    "angular-mocks": "^1.4.8",
+    "angular-mocks": "*",
     "blanket": "^1.1.9",
     "bootstrap-webpack": "0.0.5",
     "coveralls": "^2.11.4",
