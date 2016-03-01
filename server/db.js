@@ -5,10 +5,30 @@
  * @module 
  */
 
-var MongoClient = require("mongodb").MongoClient,
-    url = "mongodb://localhost/experigen";
+var MongoClient = require("mongodb").MongoClient;
 var util = require("./util");
 
+/**
+ * Figures out the URL of the database: if we're on Amazon EBS,
+ * we're connecting to the linked mongo, otherwise we're running
+ * on localhost.
+ * @returns String
+ */
+var getURL = function(){
+    var addr = process.env.MONGODB_PORT_27017_TCP_ADDR,
+        port = process.env.MONGODB_PORT_27017_TCP_PORT,
+        dbname = "experigen";
+    if (addr){ // we're running on Amazon!
+        return "mongodb://" + addr + ":" + port + "/" + dbname;
+    }
+    else {
+        return "mongodb://localhost/" + dbname;
+    }
+};
+
+// memoize this
+var url = getURL();
+console.log("MongoDB database at " + url);
 
 /**
  * Returns the database object to play with if necessary.
