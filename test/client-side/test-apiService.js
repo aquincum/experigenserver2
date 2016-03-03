@@ -10,7 +10,7 @@ describe("apiService", function(){
         experimentName: "y",
         getDestination: function() { return "z"; },
         url: function(){
-            return "/users?sourceurl=" +
+            return "users?sourceurl=" +
                 this.sourceURL + "&experimentName=" +
                 this.experimentName + "&file=" +
                 this.getDestination();

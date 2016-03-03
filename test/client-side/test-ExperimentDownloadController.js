@@ -31,7 +31,7 @@ describe("ExperimentDownloadController", function(){
     });
 
     it("Should check existence correctly", function(){
-        var url = "/users?sourceurl=alma&experimentName=korte",
+        var url = "users?sourceurl=alma&experimentName=korte",
             ctrl = cCtrl();
         scope.sourceURL = "alma";
         scope.experimentName = "korte";
@@ -60,7 +60,7 @@ describe("ExperimentDownloadController", function(){
     // OK This wouldn't work on a browser without window.URL
     // Like PhantomJS. Do I want to have another way of downloading?
         var ctrl = cCtrl();
-        var url = "/makecsv?sourceurl=alma&experimentName=korte",
+        var url = "makecsv?sourceurl=alma&experimentName=korte",
             resp = "this\tis\ta\theader\tuserCode\n1\t2\t3\t4\tUSX143\n";
         spyOn(FileSaver, "saveAs");
         $httpBackend.whenGET(url).respond(resp);
@@ -84,7 +84,7 @@ describe("ExperimentDownloadController", function(){
 
     it("Should find destinations", function(){
         var ctrl = cCtrl();
-        var url = "/destinations?sourceurl=alma&experimentName=korte",
+        var url = "destinations?sourceurl=alma&experimentName=korte",
             resp = '["hajde.txt","hvadgordu.csv"]';
         $httpBackend.whenGET(url).respond(200, resp);
         scope.sourceURL = "alma";

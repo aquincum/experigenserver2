@@ -44,7 +44,7 @@ module.exports = function(app){
                     $scope.reggedExperiments = [];
                 }
                 else{
-                    authService.ajaxLocal("/auth/registration?experimenter=" + authService.getExperimenter(), "GET")
+                    authService.ajaxLocal("auth/registration?experimenter=" + authService.getExperimenter(), "GET")
                         .then(function(regs){
                             $scope.reggedExperiments = regs.data;
                             $scope.state.surlSelected = false;
@@ -101,7 +101,7 @@ module.exports = function(app){
                 "sourceurl=" + $scope.sourceURL,
                 "experimentName=" + $scope.experimentName
             ]
-            var url = "/auth/registration?" + params.join("&");
+            var url = "auth/registration?" + params.join("&");
             authService.ajaxLocal(url, "DELETE")
                 .then(function(){
                     responder.respond("Registration deleted!", "success");

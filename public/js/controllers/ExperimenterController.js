@@ -27,7 +27,7 @@ module.exports = function(app){
             $scope.ha1 = crypto.MD5($scope.experimenter + ":Experimenters:" + $scope.password).toString();
         };
         $scope.register = function(){
-            var req = "/experimenter?experimenter=" + $scope.experimenter +
+            var req = "experimenter?experimenter=" + $scope.experimenter +
                 "&ha1="+(crypto.MD5($scope.experimenter + ":Experimenters:" + $scope.password).toString());
             $http.post(req).then(function(data){
                 responder.respond($scope.experimenter + " registered!", "success");

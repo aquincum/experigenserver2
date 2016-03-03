@@ -25,7 +25,7 @@ module.exports = function(app){
         };
 
         service.login = function(){
-            return service.ajaxLocal("/auth/me", "GET")
+            return service.ajaxLocal("auth/me", "GET")
                 .then(function(){
                     setLoggedIn(true);
                     return true;
@@ -59,11 +59,9 @@ module.exports = function(app){
             if(uri.indexOf("password=") === -1){ // hope so!!
                 uri += "&password=" + password;
             }
-            console.log("URI1:",uri);
-            if(uri.indexOf("/auth") !== -1){
-                uri = uri.replace("/auth", "/local");
+            if(uri.indexOf("auth/") !== -1){
+                uri = uri.replace("auth/", "local/");
             }
-            console.log("URI2:",uri);
             return $http({
                 method: method,
                 url: uri
@@ -76,21 +74,18 @@ module.exports = function(app){
          */
         service.ajaxDigest = function(uri, method){
             var newheader = "";
-            if(uri.indexOf("/auth") !== -1){
-                uri = uri.replace("/auth", "/digest")
+            if(uri.indexOf("auth/") !== -1){
+                uri = uri.replace("auth/", "digest/")
             }
             return $http({method: method,
                           url: uri,
                           headers: {"Authorization": ""}
                          }).then(function(response){
-                              console.log("No auth needed :O");
                               return response; // No auth was needed!
                           }).catch(function(response){
                               if(response.status != 401){
-                                  console.log("Oy vey!");
                                   throw response;
                               }
-                              console.log("HERE2");
                               newheader = reqAuthDigest.reqAuthDigest(uri,
                                                                       experimenter,
                                                                       password,

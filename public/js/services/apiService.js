@@ -26,7 +26,7 @@ module.exports = function(app){
             if(li){
                 request = "auth/" + request;
             }
-            var req = "/" + request + "?",
+            var req = request + "?",
                 dest = scope.getDestination();
             responder.respond("");
             req += "sourceurl=" + scope.sourceURL;

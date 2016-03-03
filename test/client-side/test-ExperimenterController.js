@@ -37,12 +37,12 @@ describe("authService", function(){
     });
 
     it("ajaxLocal should work", function(done){
-        $httpBackend.expectGET("/local/teszt?experimenter=alma&password=korte").respond(function(){
+        $httpBackend.expectGET("local/teszt?experimenter=alma&password=korte").respond(function(){
             return [200, "jej"];
         });
         authService.setExperimenter("alma");
         authService.setPassword("korte");
-        authService.ajaxLocal("/auth/teszt", "get").then(function(resp){
+        authService.ajaxLocal("auth/teszt", "get").then(function(resp){
             expect(resp.data).toEqual("jej");
             done();
         }).catch(function(resp){
@@ -52,7 +52,7 @@ describe("authService", function(){
     });
 
     it("Should send a correct login", function (done){
-        $httpBackend.expectGET("/local/me?experimenter=alma&password=korte").respond(200, "alma");
+        $httpBackend.expectGET("local/me?experimenter=alma&password=korte").respond(200, "alma");
         authService.setExperimenter("alma");
         authService.setPassword("korte");
         authService.login().then(function(li){
@@ -63,7 +63,7 @@ describe("authService", function(){
         $httpBackend.flush();
     });
     it("Should send an incorrect login and react as such", function (done){
-        $httpBackend.expectGET("/local/me?experimenter=alma&password=k0rte").respond(401, "none");
+        $httpBackend.expectGET("local/me?experimenter=alma&password=k0rte").respond(401, "none");
         authService.setExperimenter("alma");
         authService.setPassword("k0rte");
         authService.login().then(function(li){
@@ -74,7 +74,7 @@ describe("authService", function(){
         $httpBackend.flush();
     });
     it("Should send a correct logout", function (done){
-        $httpBackend.expectGET("/local/me?experimenter=alma&password=korte").respond(200, "alma");
+        $httpBackend.expectGET("local/me?experimenter=alma&password=korte").respond(200, "alma");
         authService.setExperimenter("alma");
         authService.setPassword("korte");
         authService.login().then(function(li){
@@ -121,7 +121,7 @@ describe("ExperimenterController", function(){
         scope.experimenter = "alma";
         scope.password = "korte";
         var ha1 = crypto.MD5("alma:Experimenters:korte").toString();
-        $httpBackend.expectPOST("/experimenter?experimenter=alma&ha1="+ha1)
+        $httpBackend.expectPOST("experimenter?experimenter=alma&ha1="+ha1)
             .respond(200, "done");
         scope.register();
         $httpBackend.flush();
@@ -134,7 +134,7 @@ describe("ExperimenterController", function(){
         scope.experimenter = "alma";
         scope.password = "korte";
         var ha1 = crypto.MD5("alma:Experimenters:korte").toString();
-        $httpBackend.expectPOST("/experimenter?experimenter=alma&ha1="+ha1)
+        $httpBackend.expectPOST("experimenter?experimenter=alma&ha1="+ha1)
             .respond(409, "conflict");
         scope.register();
         $httpBackend.flush();

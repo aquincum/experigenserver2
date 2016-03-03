@@ -11,7 +11,7 @@ module.exports = function(app){
                 "sourceurl=" + $scope.uncleanedURL,
                 "experimentName=" + $scope.experimentName
             ];
-            const url = "/auth/registration?" + params.join("&");
+            const url = "auth/registration?" + params.join("&");
             authService.ajaxLocal(url, "POST")
                 .then(function(){
                     responder.respond("Experiment registered!", "success");
