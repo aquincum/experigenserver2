@@ -26,6 +26,14 @@ server.use(express.static("public", {
     extensions: ["html"]
 }));
 server.use(session({secret: "keyboard cat"}));
+server.use(function(req, res, next){
+    if(req.query && req.query.sourceurl){
+        req.query.sourceurl = decodeURIComponent(req.query.sourceurl);
+    }
+    next();
+});
+
+
 routing.route(server, argv.e);
 
 var port = argv.p || process.env.PORT || 3000;

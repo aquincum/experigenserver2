@@ -244,6 +244,13 @@ describe("getuserid", function(){
             .expect(200)
             .expect('"2"', done);
     });
+    it("double encoding should work (happens...)", function(done){
+        request(server)
+            .get("/getuserid?sourceurl=" + encodeURIComponent(encodeURIComponent(tempsourceurl)) +
+                 "&experimentName=" + tempexperimentname)
+            .expect(200)
+            .expect('"2"', done);
+    });
 });
 
 describe("dbwrite", function(){
@@ -270,7 +277,7 @@ describe("dbwrite", function(){
     it("Should otherwise write to the database", function(done){
         request(server)
             .get("/dbwrite?experimentName=" + tempexperimentname + "q&" +
-                 "sourceurl=" + tempsourceurl + "&" +
+                 "sourceurl=" + encodeURIComponent(tempsourceurl) + "&" +
                  "userCode=Tester&" +
                  "userFileName=1&" +
                  "info=" + now
@@ -773,7 +780,7 @@ describe("Experimenter accounts", function(){
         });
         it("Should let me write to registered experiment", function(done){
             request(server).get("/dbwrite?experimentName=" + tempexperimentname + "r&" +
-                                "sourceurl=" + tempsourceurl + "&" +
+                                "sourceurl=" + encodeURIComponent(tempsourceurl) + "&" +
                                 "userCode=Tester&" +
                                 "userFileName=1&" +
                                 "info=11"
