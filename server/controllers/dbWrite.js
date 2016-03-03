@@ -14,7 +14,7 @@ var dbWrite = function(req, res){
         if(!stat){
             stat = 500;
         }
-        res.status(stat).end("(\"false\")"); // this is how the cgi died
+        res.status(stat).jsonp("false").end(); // this is how the cgi died
     }
     if (!req.query) return fail(400);
     // necessary fields
@@ -33,7 +33,7 @@ var dbWrite = function(req, res){
     // let's pass on everything now to the db, I'll clean up there.
     experiment.write(query).then(function (success){
         if(success){
-            res.status(200).end("(\"true\")");
+            res.status(200).jsonp("true").end();
         }
         else {
             fail();

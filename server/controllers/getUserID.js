@@ -11,14 +11,14 @@ var getUserID = function(req, res){
     var html = req.query.sourceurl,
         expname = req.query.experimentName;
     if(!html || !expname) {
-        res.status(400).end("(\"0\")");
+        res.status(400).jsonp('0').end();
     }
     else {
         var experiment = new Experiment(html, expname);
         experiment.getUserFileName().then(function (ufn){
-            res.status(200).end("(\"" + ufn.toString() + "\")");
+            res.status(200).jsonp(ufn.toString()).end();
         }).catch(function(err){
-            res.status(500).end('("-1")');
+            res.status(500).jsonp('-1').end();
         });
     }
 };

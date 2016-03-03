@@ -220,21 +220,29 @@ describe("getuserid", function(){
         request(server)
             .get("/getuserid")
             .expect(400)
-            .expect('("0")', done);
+            .expect('"0"', done);
     });
     it("Should give back 1 if new experiment", function(done){
         request(server)
             .get("/getuserid?sourceurl=" + tempsourceurl +
                  "&experimentName=" + tempexperimentname + "givback1")
             .expect(200)
-            .expect('("1")', done);
+            .expect('"1"', done);
+    });
+    it("JSONP should work", function(done){
+        request(server)
+            .get("/getuserid?sourceurl=" + tempsourceurl +
+                 "&experimentName=" + tempexperimentname + "givback1" +
+                 "&callback=callMe")
+            .expect(200)
+            .expect('/**/ typeof callMe === \'function\' && callMe("1");', done);
     });
     it("Should give back 2 after 1 user", function(done){
         request(server)
             .get("/getuserid?sourceurl=" + tempsourceurl +
                  "&experimentName=" + tempexperimentname)
             .expect(200)
-            .expect('("2")', done);
+            .expect('"2"', done);
     });
 });
 
@@ -248,15 +256,15 @@ describe("dbwrite", function(){
         request(server)
             .get("/dbwrite")
             .expect(400)
-            .expect('("false")', doneifdone);
+            .expect('"false"', doneifdone);
         request(server)
             .get("/dbwrite?userCode=JANI&userFileName=5&sourceurl=no.where")
             .expect(400)
-            .expect('("false")', doneifdone);
+            .expect('"false"', doneifdone);
         request(server)
             .get("/dbwrite?experimentName=xxx")
             .expect(400)
-            .expect('("false")', doneifdone);
+            .expect('"false"', doneifdone);
     });
     var now = (new Date()).getTime();
     it("Should otherwise write to the database", function(done){
@@ -268,7 +276,7 @@ describe("dbwrite", function(){
                  "info=" + now
                 )
             .expect(200)
-            .expect('("true")', done);
+            .expect('"true"', done);
     });
     it("Which should be there in the database", function(){
 	var _db = db.getDB();
@@ -771,7 +779,7 @@ describe("Experimenter accounts", function(){
                                 "info=11"
                                )
                 .expect(200)
-                .expect('("true")', done);
+                .expect('"true"', done);
         });
         it("Should let registered access to the registered experiment", function(done){
             expectAuthDigest("/digest/destinations?sourceurl=" + encodeURIComponent(tempsourceurl) +

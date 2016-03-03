@@ -20,7 +20,7 @@ var getDestinations = function(req, res){
     }
     var experiment = new Experiment(sourceurl, experimentName);
     experiment.getDestinations().then(function(dests){
-        res.status(200).end(JSON.stringify(dests));
+        res.status(200).json(dests).end();
     }).catch(function(err){
         if(err.message == Experiment.NOSUCHEXPERIMENT){
             res.status(404).end(err.message);
