@@ -3,8 +3,7 @@
  * @module
  */
 
-var MongoClient = require("mongodb").MongoClient,
-    url = "mongodb://localhost/experigen";
+var database = require("../db");
 
 /**
  * Finds an experimenter account in that database.
@@ -12,7 +11,7 @@ var MongoClient = require("mongodb").MongoClient,
  * @returns {Promise<user>} The user account
  */
 module.exports.findExperimenter = function(username){
-    return MongoClient.connect(url).then(function(db){
+    return database.getDB().then(function(db){
         var coll = db.collection("experimenters");
         return coll.findOne({username: username});
     });
@@ -27,7 +26,7 @@ module.exports.findExperimenter = function(username){
  */
 module.exports.insertExperimenter = function(username, ha1){
     var coll;
-    return MongoClient.connect(url)
+    return database.getDB()
         .then(function(db){
             coll = db.collection("experimenters");
             return coll.count({username: username});
@@ -49,7 +48,7 @@ module.exports.insertExperimenter = function(username, ha1){
  */
 module.exports.updateExperimenter = function(username, ha1){
     var coll;
-    return MongoClient.connect(url)
+    return database.getDB()
         .then(function(db){
             coll = db.collection("experimenters");
             return coll.count({username: username});
@@ -71,7 +70,7 @@ module.exports.updateExperimenter = function(username, ha1){
  */
 module.exports.deleteExperimenter = function(username){
     var coll;
-    return MongoClient.connect(url)
+    return database.getDB()
         .then(function(db){
             coll = db.collection("experimenters");
             return coll.count({username: username});
