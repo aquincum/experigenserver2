@@ -470,7 +470,7 @@ describe("Get destinations", function(){
     });
 });
 
-describe.skip("Stresstest", function(){
+describe("Stresstest", function(){
     var STRESSN = 100000;
     var stressExp = new Experiment(tempsourceurl, tempexperimentname + ".stresstest");
     this.timeout(100 * 1000);
