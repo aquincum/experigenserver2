@@ -176,7 +176,11 @@ Experiment.prototype.removeExperiment = function(){
  *  if no such experiment is there in the db.
  */
 Experiment.prototype.getAllData = function(destination){
+    function log(s){
+        console.log(s + " rss=" + process.memoryUsage().rss);
+    }
     var that = this;
+    log("getAllData started...");
     if(!destination){
         destination = "default.csv";
     }
@@ -185,13 +189,16 @@ Experiment.prototype.getAllData = function(destination){
     }
     return this.connectToCollection()
         .then(function(coll){
+            log("getAllData connected to collection...");
             return coll.find({experimentName: that.experimentName,
                               destination:    destination},
                              { _id: 0 }
                             );
         }).then(function(cursor){
+            log("getAllData cursor returned...");
             return cursor.toArray();
         }).then(function(results){
+            log("results returned...");
             if(results.length === 0){
                 throw new Error(NOSUCHEXPERIMENT);
             }
