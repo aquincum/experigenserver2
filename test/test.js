@@ -364,13 +364,23 @@ describe("Make CSV", function(){
 	    })
             .end(done);
     });
+    it("Should give me the count of data", function(done){
+        request(server)
+            .get('/count?sourceurl=' + tempsourceurl +
+                 '&experimentName=' + tempexperimentname)
+            .expect(200)
+            .expect(function(res){
+                res = JSON.parse(res.text);
+                assert.equal(res.n, NTOWRITE);
+            })
+            .end(done);
+    });
     it("Should stream me back the results", function(done){
         request(server)
             .get('/streamresults?sourceurl=' + tempsourceurl +
                  '&experimentName=' + tempexperimentname)
             .expect(200)
             .expect(function(res){
-                console.log("RESTEXT",res.text);
 		res = JSON.parse(res.text);
 		assert.equal(res.length, NTOWRITE);
 		assert.ok(res[0].userCode);

@@ -279,4 +279,20 @@ Experiment.prototype.getUserFileName = function(){
         });
 };
 
+/**
+ * Returns the count of entries for a given destionation
+ */
+Experiment.prototype.count = function(destination){
+    if(!destination){
+        destination = "default.csv";
+    }
+    if(destination == "default.csv"){
+        destination = {$exists: false};
+    }
+    return this.connectToCollection()
+        .then(function(coll){
+            return coll.count({destination: destination});
+        });
+}
+
 module.exports = Experiment;

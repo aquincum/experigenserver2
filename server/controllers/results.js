@@ -120,8 +120,29 @@ var getUsers = function(req, res){
     });
 };
 
+/** Returns the total n of records */
+var count = function(req, res){
+    function fail(){
+        res.status(400).json({error: "Wrong query", n: 0}).end(); 
+    }
+    if (!req.query) return fail();
+    var experimentName = req.query.experimentName,
+        sourceurl = req.query.sourceurl;
+    if (!experimentName || !sourceurl){
+        return fail();
+    }
+    var experiment = new Experiment(sourceurl, experimentName);
+    experiment.count().then(function(n){
+        res.status(200).json({n: n}).end();
+    }).catch(function(err){
+        res.status(500).json({error: err, n: 0}).end();
+    });
+    
+}
+
 module.exports = {
     getUsers: getUsers,
     makeCSV: makeCSV,
-    streamResults: streamResults
+    streamResults: streamResults,
+    count: count
 };
