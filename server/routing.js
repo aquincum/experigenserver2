@@ -35,45 +35,30 @@ var routes = {
             "/experimenter": authCtrl.postExperimenter
         }
     },
-    local: {
+    auth: {
         get: {
-            "/local/me": authCtrl.me,
-            "/local/makecsv": authCtrl.checkRegistration.bind(null, resultsCtrl.makeCSV),
-            "/local/users": authCtrl.checkRegistration.bind(null, resultsCtrl.getUsers),
-            "/local/destinations": authCtrl.checkRegistration.bind(null, getDestinations),
-            "/local/registration": regCtrl.getAllRegistrations
+            "/auth/me": authCtrl.me,
+            "/auth/makecsv": authCtrl.checkRegistration.bind(null, resultsCtrl.makeCSV),
+            "/auth/streamresults": authCtrl.checkRegistration.bind(null, resultsCtrl.streamResults),
+            "/auth/count": authCtrl.checkRegistration.bind(null, resultsCtrl.count),
+            "/auth/users": authCtrl.checkRegistration.bind(null, resultsCtrl.getUsers),
+            "/auth/destinations": authCtrl.checkRegistration.bind(null, getDestinations),
+            "/auth/registration": regCtrl.getAllRegistrations
         },
         post: {
-            "/local/registration": regCtrl.postRegistration
+            "/auth/registration": regCtrl.postRegistration
         },
         put: {
-            "/local/experimenter": authCtrl.putExperimenter
+            "/auth/experimenter": authCtrl.putExperimenter
         },
         delete: {
-            "/local/experimenter": authCtrl.deleteExperimenter,
-            "/local/registration": regCtrl.deleteRegistration
-        }
-    },
-    digest: {
-        get: {
-            "/digest/me": authCtrl.me,
-            "/digest/makecsv": authCtrl.checkRegistration.bind(null, resultsCtrl.makeCSV),
-            "/digest/users": authCtrl.checkRegistration.bind(null, resultsCtrl.getUsers),
-            "/digest/destinations": authCtrl.checkRegistration.bind(null, getDestinations),
-            "/digest/registration": regCtrl.getAllRegistrations
-        },
-        post: {
-            "/digest/registration": regCtrl.postRegistration
-        },
-        put: {
-            "/digest/experimenter": authCtrl.putExperimenter
-        },
-        delete: {
-            "/digest/experimenter": authCtrl.deleteExperimenter,
-            "/digest/registration": regCtrl.deleteRegistration        
+            "/auth/experimenter": authCtrl.deleteExperimenter,
+            "/auth/registration": regCtrl.deleteRegistration
         }
     }
 };
+
+
 
 /**
  * A dictionary basically, with routes as keys and handler functions
@@ -93,23 +78,31 @@ module.exports.routes = routes;
  * .cgi addresses as well.
  */
 module.exports.route = function doRouting(server, emulate) {
+    routes.local = routes.auth;
+    routes.digest = routes.auth;
+    delete routes.auth;
+
+    
     /** noop to run if no authentication needed */
     function noop (res, req, next) {next();}
     authentication.setup(server);
     for(var authenticated in routes){
         for(var method in routes[authenticated]){
             for(var path in routes[authenticated][method]){
+                var publicPath = path;
                 var authFunc = noop;
                 switch(authenticated){
                 case "local":
                     authFunc = authentication.authenticateLocal();
+                    publicPath = path.replace("/auth/","/local/");
                     break;
                 case "digest":
                     authFunc = authentication.authenticateDigest();
+                    publicPath = path.replace("/auth/","/digest/");
                     //break;
                 }
                 server[method](
-                    path,
+                    publicPath,
                     authFunc,
                     routes[authenticated][method][path]
                 );
