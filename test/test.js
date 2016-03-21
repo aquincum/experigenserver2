@@ -17,6 +17,8 @@ var testutils = require("./testutils");
 var HA1 = testutils.HA1;
 var expectAuthDigest = testutils.expectAuthDigest;
 
+var stresstestDescribe = process.env.TRAVIS ? describe : describe.skip;
+
 // from passport-http
 
 before("Connecting to the server", function(){
@@ -362,6 +364,27 @@ describe("Make CSV", function(){
 	    })
             .end(done);
     });
+    it("Should stream me back the results", function(done){
+        request(server)
+            .get('/streamresults?sourceurl=' + tempsourceurl +
+                 '&experimentName=' + tempexperimentname)
+            .expect(200)
+            .expect(function(res){
+                console.log("RESTEXT",res.text);
+		res = JSON.parse(res.text);
+		assert.equal(res.length, NTOWRITE);
+		assert.ok(res[0].userCode);
+		assert.ok(res[0].userFileName);
+		assert.ok(res[0].response);
+		assert.ok(res[0].sourceurl);
+		assert.ok(res[0].experimentName);
+		assert.ok(res[0].i.toString);
+		assert.equal(Object.keys(res[87]).length, 6);
+		assert.equal(res[87].experimentName, tempexperimentname);
+		assert.equal(res[87].response, "good");
+	    })
+            .end(done);
+    });
     it("Should tell me if there's no such experiment", function(done){
         request(server)
             .get('/makecsv?sourceurl=' + tempsourceurl +
@@ -470,7 +493,7 @@ describe("Get destinations", function(){
     });
 });
 
-describe("Stresstest", function(){
+stresstestDescribe("Stresstest", function(){
     var STRESSN = 100000;
     var stressExp = new Experiment(tempsourceurl, tempexperimentname + ".stresstest");
     this.timeout(100 * 1000);

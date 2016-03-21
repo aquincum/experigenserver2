@@ -63,6 +63,41 @@ var makeCSV = function(req, res){
 };
 
 
+var streamResults = function(req, res){
+    if(!req.query){
+        return res.status(400).json({error: "No query specified"}).end();
+    }
+    var experimentName = req.query.experimentName,
+        sourceurl = req.query.sourceurl,
+        file = req.query.file;
+    if (!experimentName || !sourceurl){
+        return res.status(400).json({error: "Incomplete query"}).end();
+    }
+    if(!file){
+        file = "default.csv";
+    }
+    var experiment = new Experiment(sourceurl, experimentName);
+    experiment.getAllData(file, true).then(function(stream){
+        var first = true;
+        res.writeHead(200, {
+            "Content-Type": "application-json"
+        });
+        res.write("[");
+        //stream.pipe(res);
+        stream.on("data", function(chunk){
+            if(!first){
+                res.write(",")
+            }
+            res.write(JSON.stringify(chunk));
+            first = false;
+        })
+        stream.on("end", function(){
+            res.write("]");
+            res.end();
+        });
+    });
+};
+
 
 /**
  * Returns the usercode/number of records table.
@@ -87,5 +122,6 @@ var getUsers = function(req, res){
 
 module.exports = {
     getUsers: getUsers,
-    makeCSV: makeCSV
+    makeCSV: makeCSV,
+    streamResults: streamResults
 };

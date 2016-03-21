@@ -23,6 +23,7 @@ var routes = {
             "/getuserid" : getUserID,
             "/dbwrite": dbWrite,
             "/makecsv": authCtrl.checkRegistration.bind(null, resultsCtrl.makeCSV),
+            "/streamresults": authCtrl.checkRegistration.bind(null, resultsCtrl.streamResults),
             "/users": authCtrl.checkRegistration.bind(null, resultsCtrl.getUsers),
             "/destinations": authCtrl.checkRegistration.bind(null, getDestinations),
             "/experimenter": authCtrl.getExperimenter,

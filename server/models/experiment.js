@@ -172,18 +172,21 @@ Experiment.prototype.removeExperiment = function(){
  * @param {string} [destination="default.csv"] The destination CSV the data was sent.
  * Conforming to the old CSV style, "default.csv" is the default, so
  * data for which no destination was specified goes there.
- * @param {Promise<Object[]>} The results. It should return an error
+ * @param {boolean} [stream=false] Whether to stream the data back instead of returning
+ * the data in whole.
+ * @param {Promise<Object[]> | Promise<Stream>} The results or the result stream. It should return an error
  *  if no such experiment is there in the db.
  */
-Experiment.prototype.getAllData = function(destination){
+Experiment.prototype.getAllData = function(destination, stream){
+    if (!stream) stream = false;
+    if(!destination){
+        destination = "default.csv";
+    }
     function log(s){
         console.log(s + " rss=" + process.memoryUsage().rss);
     }
     var that = this;
     log("getAllData started...");
-    if(!destination){
-        destination = "default.csv";
-    }
     if(destination == "default.csv"){
         destination = {$exists: false};
     }
@@ -196,14 +199,19 @@ Experiment.prototype.getAllData = function(destination){
                             );
         }).then(function(cursor){
             log("getAllData cursor returned...");
-            return cursor.toArray();
-        }).then(function(results){
-            log("results returned...");
-            if(results.length === 0){
-                throw new Error(NOSUCHEXPERIMENT);
+            if(!stream){
+                return cursor.toArray().then(function(results){
+                    log("results returned...");
+                    if(results.length === 0){
+                        throw new Error(NOSUCHEXPERIMENT);
+                    }
+                    else {
+                        return results;
+                    }
+                });
             }
-            else {
-                return results;
+            else{ // if(stream)
+                return cursor.stream();
             }
         });
 };
