@@ -6,47 +6,11 @@
 
 var fnv = require("fnv-plus");
 var fs = require("fs");
+var commonutil = require("../commonutil");
 
-
-/**
- * Goes through all the objects in an array, and collects all the field
- * names that occur in them
- * @param {Object[]} data The list of data
- * @returns {string[]} The names of fields
- */
-module.exports.getAllFieldNames = function(data){
-    var fieldlist = [];
-    data.forEach(function(elem){
-        for(var f in elem){
-            if(fieldlist.indexOf(f) === -1){
-                fieldlist.push(f);
-            }
-        }
-    });
-    return fieldlist;
-};
-
-
-/**
- * Returns a string that is a line for the given dataset, in the order of fields
- * specified in the fields array. Fields separated by tabs. (Yes.)
- * @param {Object} o The object to lineify
- * @param {string[]} fields Field names (order matters!)
- * @returns {string} The lineified string
- */
-module.exports.formTSVLine = function(o, fields){
-    var vals = [];
-    fields.forEach(function(fieldname){
-        if(o[fieldname]){
-            vals.push(o[fieldname]);
-        }
-        else {
-            vals.push("");
-        }
-    });
-    return (vals.join("\t") + "\n");
-};
-
+for(f in commonutil){
+    module.exports[f] = commonutil[f];
+}
 
 /**
  * Hashes the string. Now using FNV-1, returning the hexadecimal

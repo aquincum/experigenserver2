@@ -21,14 +21,15 @@ module.exports = function(app){
                 responder.respond("Odd error :O status code " + err.status + ", message: " + err.data, "danger");
             }
         };
-        var apiCall = function (request, scope){
+        var apiCall = function (request, scope, initRespond){
+            if(!initRespond) initRespond = "";
             var li = authService.isLoggedIn();
             if(li){
                 request = "auth/" + request;
             }
             var req = request + "?",
                 dest = scope.getDestination();
-            responder.respond("");
+            responder.respond(initRespond);
             req += "sourceurl=" + scope.sourceURL;
             req += "&experimentName=" + scope.experimentName;
             if(dest !== ""){

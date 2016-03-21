@@ -60,8 +60,9 @@ describe("ExperimentDownloadController", function(){
     // OK This wouldn't work on a browser without window.URL
     // Like PhantomJS. Do I want to have another way of downloading?
         var ctrl = cCtrl();
-        var url = "makecsv?sourceurl=alma&experimentName=korte",
-            resp = "this\tis\ta\theader\tuserCode\n1\t2\t3\t4\tUSX143\n";
+        var url = "stream?sourceurl=alma&experimentName=korte",
+            resp = '[{"this": 1, "is": 2, "a":3, "header": 4, "userCode": "USX143"}]\n'
+            csvresp = "this\tis\ta\theader\tuserCode\n1\t2\t3\t4\tUSX143\n";
         spyOn(FileSaver, "saveAs");
         $httpBackend.whenGET(url).respond(resp);
         scope.sourceURL = "alma";
@@ -70,13 +71,13 @@ describe("ExperimentDownloadController", function(){
         $httpBackend.expectGET(url);
         $httpBackend.flush();
         expect(responder.respond.calls.count()).toEqual(2);
-        expect(responder.respond).toHaveBeenCalledWith("");
-        expect(responder.respond).toHaveBeenCalledWith("<strong>Success!</strong> Data download should start right away.", "success");
+        expect(responder.respond).toHaveBeenCalledWith("Download started...");
+        expect(responder.respond).toHaveBeenCalledWith("Response received!", "success");
         expect(FileSaver.saveAs).toHaveBeenCalled();
         var bl = FileSaver.saveAs.calls.mostRecent().args[0];
         var reader = new FileReader();
         reader.onloadend =  function(){
-            expect(reader.result).toEqual(resp);
+            expect(reader.result).toEqual(csvresp);
             done();
         };
         reader.readAsText(bl);

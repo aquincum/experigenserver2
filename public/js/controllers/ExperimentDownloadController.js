@@ -1,3 +1,5 @@
+var commonutil = require("../../../commonutil");
+
 module.exports = function(app){
     app.controller("ExperimentDownloadController", function($scope, responder, apiService, FileSaver, Blob, authService, $timeout){
         $scope.sourceURL = "";
@@ -28,10 +30,14 @@ module.exports = function(app){
             });
         };
         $scope.getData = function(){
-            apiService.apiCall("makecsv", $scope).then(function(data){
-                responder.respond("<strong>Success!</strong> Data download should start right away.", "success");
-                var blob = new Blob([data.data], {type: "octet/stream"});
-                FileSaver.saveAs(blob, $scope.getDestination() || "xp.csv");
+            var dest = $scope.getDestination();
+            var fn = dest ? (dest == "default.csv" ? "xp.csv" : dest) : "xp.csv";
+            apiService.apiCall("stream", $scope, "Download started...").then(function(data){
+                responder.respond("Response received!", "success");
+                var alldata = data.data;
+                var txt = commonutil.toCSV(alldata);
+                var blob = new Blob([txt], {type: "octet/stream"});
+                FileSaver.saveAs(blob, fn);
             });
         };
 
