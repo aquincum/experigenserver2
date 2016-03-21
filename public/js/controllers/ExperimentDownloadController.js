@@ -32,7 +32,7 @@ module.exports = function(app){
         $scope.getData = function(){
             var dest = $scope.getDestination();
             var fn = dest ? (dest == "default.csv" ? "xp.csv" : dest) : "xp.csv";
-            apiService.apiCall("stream", $scope, "Download started...").then(function(data){
+            apiService.apiCall("streamresults", $scope, "Download started...").then(function(data){
                 responder.respond("Response received!", "success");
                 var alldata = data.data;
                 var txt = commonutil.toCSV(alldata);

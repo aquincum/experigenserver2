@@ -60,7 +60,7 @@ describe("ExperimentDownloadController", function(){
     // OK This wouldn't work on a browser without window.URL
     // Like PhantomJS. Do I want to have another way of downloading?
         var ctrl = cCtrl();
-        var url = "stream?sourceurl=alma&experimentName=korte",
+        var url = "streamresults?sourceurl=alma&experimentName=korte",
             resp = '[{"this": 1, "is": 2, "a":3, "header": 4, "userCode": "USX143"}]\n'
             csvresp = "this\tis\ta\theader\tuserCode\n1\t2\t3\t4\tUSX143\n";
         spyOn(FileSaver, "saveAs");
