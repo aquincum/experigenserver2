@@ -62,19 +62,28 @@ var makeCSV = function(req, res){
     });
 };
 
-
+/**
+ * Streams the results as JSON. Has the same query as makeCSV plus an
+ * optional parameter: `ndjson`. If `ndjson` is specified and is not set
+ * to 0 or false, the result will be in ndJSON (newline delimited), otherwise the
+ * result will be proper JSON.
+ */
 var streamResults = function(req, res){
     if(!req.query){
         return res.status(400).json({error: "No query specified"}).end();
     }
     var experimentName = req.query.experimentName,
         sourceurl = req.query.sourceurl,
-        file = req.query.file;
+        file = req.query.file,
+        ndjson = req.query.ndjson;
     if (!experimentName || !sourceurl){
         return res.status(400).json({error: "Incomplete query"}).end();
     }
     if(!file){
         file = "default.csv";
+    }
+    if(!ndjson || ndjson === "false" || ndjson === "0"){
+        ndjson = false;
     }
     var experiment = new Experiment(sourceurl, experimentName);
     experiment.getAllData(file, true).then(function(stream){
@@ -82,17 +91,21 @@ var streamResults = function(req, res){
         res.writeHead(200, {
             "Content-Type": "application-json"
         });
-        res.write("[");
+        if(!ndjson) {
+            res.write("[");
+        }
         //stream.pipe(res);
         stream.on("data", function(chunk){
-            if(!first){
+            if(!first && !ndjson){
                 res.write(",")
             }
             res.write(JSON.stringify(chunk));
             first = false;
         })
         stream.on("end", function(){
-            res.write("]");
+            if(!ndjson) {
+                res.write("]");
+            }
             res.end();
         });
     });
