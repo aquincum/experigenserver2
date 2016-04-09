@@ -14,19 +14,16 @@ var _db = null;
 /**
  * Figures out the URL of the database: if we're on Amazon EBS,
  * we're connecting to the linked mongo, otherwise we're running
- * on localhost.
+ * on localhost. And if we have the EXPERIGEN_MONGODB_ADDR environment
+ * vairable set, use that; with EXPERIGEN_MONGODB_PORT or 27017 
+ * by default
  * @returns String
  */
 var getURL = function(){
-    var addr = process.env.MONGODB_PORT_27017_TCP_ADDR,
-        port = process.env.MONGODB_PORT_27017_TCP_PORT,
+    var addr = process.env.EXPERIGEN_MONGODB_ADDR || process.env.MONGODB_PORT_27017_TCP_ADDR || "localhost",
+        port = process.env.EXPERIGEN_MONGODB_PORT || process.env.MONGODB_PORT_27017_TCP_PORT || 27017,
         dbname = "experigen";
-    if (addr){ // we're running on Amazon!
-        return "mongodb://" + addr + ":" + port + "/" + dbname;
-    }
-    else {
-        return "mongodb://localhost/" + dbname;
-    }
+    return "mongodb://" + addr + ":" + port + "/" + dbname;
 };
 
 // memoize this
