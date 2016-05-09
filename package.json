@@ -14,7 +14,8 @@
     "test-all": "NODE_ENV=test ./node_modules/mocha/bin/mocha && NODE_ENV=test karma start --single-run",
     "karma": "NODE_ENV=test karma start",
     "karma-single": "NODE_ENV=test karma start --single-run",
-    "karma-single-phantom": "NODE_ENV=test karma start --single-run --browsers PhantomJS"
+    "karma-single-phantom": "NODE_ENV=test karma start --single-run --browsers PhantomJS",
+    "run-server": "forever start main.js -p 3000"
   },
   "repository": {
     "type": "git",
@@ -41,6 +42,7 @@
     "express": "*",
     "express-session": "*",
     "fnv-plus": "*",
+    "forever": "*",
     "istanbul": ">0.3.2",
     "jquery": "^2.2.0",
     "mocha": "*",
@@ -57,10 +59,10 @@
     "blanket": "^1.1.9",
     "bootstrap-webpack": "0.0.5",
     "coveralls": "^2.11.4",
-    "css-loader": "^0.23.1",
+    "css-loader": "0.23.1",
     "exports-loader": "^0.6.2",
     "extract-text-webpack-plugin": "^1.0.1",
-    "file-loader": "^0.8.5",
+    "file-loader": "0.8.5",
     "imports-loader": "^0.6.5",
     "ink-docstrap": "^1.1.0",
     "jasmine-core": "^2.4.1",
@@ -72,13 +74,13 @@
     "karma-phantomjs-launcher": "^0.2.3",
     "karma-webpack": "^1.7.0",
     "less": "^2.5.3",
-    "less-loader": "^2.2.2",
+    "less-loader": "2.2.2",
     "mocha-lcov-reporter": "^1.0.0",
-    "style-loader": "^0.13.0",
+    "style-loader": "0.13.0",
     "supertest": "^1.1.0",
-    "url-loader": "^0.5.7",
-    "webpack": "^1.12.11",
-    "webpack-dev-server": "^1.14.1"
+    "url-loader": "0.5.7",
+    "webpack": "1.12.11",
+    "webpack-dev-server": "1.14.1"
   },
   "config": {
     "blanket": {
