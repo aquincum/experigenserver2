@@ -15,7 +15,7 @@
     "karma": "NODE_ENV=test karma start",
     "karma-single": "NODE_ENV=test karma start --single-run",
     "karma-single-phantom": "NODE_ENV=test karma start --single-run --browsers PhantomJS",
-    "run-server": "forever start main.js -p 3000"
+    "run-server": "forever start -l experigen.log -o experigen.output.log -e experigen.error.log --uid experigen main.js -p 3000"
   },
   "repository": {
     "type": "git",
