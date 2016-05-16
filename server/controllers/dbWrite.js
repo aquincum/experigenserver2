@@ -28,6 +28,12 @@ var dbWrite = function(req, res){
     // add IP and time
     var query = req.query;
     query.IP = req.ip;
+    if(query.callback){
+        delete query.callback; // do not save this
+    }
+    if(query._){
+        delete query._; // do not save this either (hopefully time will be saved well)
+    }
     query.time = (new Date()).getTime();
     var experiment = new Experiment(sourceurl, experimentName);
     // let's pass on everything now to the db, I'll clean up there.
