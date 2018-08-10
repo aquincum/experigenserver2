@@ -35,7 +35,6 @@
     "angular": "^1.4.8",
     "angular-file-saver": "^1.0.2",
     "bootstrap": "^3.3.6",
-    "bower": "*",
     "codecov": ">1.0.0",
     "crypto-js": "^3.1.6",
     "digest-ajax": "git+https://github.com/aquincum/digest-ajax.git",
